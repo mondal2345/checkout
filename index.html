@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   
   <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
-  <script src="https://www.paypal.com/sdk/js?client-id=AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7"></script>
+  <div id="paypal_sdk_container"></div>
  
   <style>
     body { background-color: #fcfcfc; margin: 0; padding: 10px; }
@@ -72,7 +72,7 @@
         <input type="text" id="pin_1" placeholder="Postal / PIN Code *">
     </div>
     
-    <div class="section-headline">65533 Choose Your Payment Method:</div>
+    <div class="section-headline">💳 Choose Your Payment Method:</div>
     <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
        <button id="pay_loader_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
        <button class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
@@ -101,13 +101,35 @@
     
     <label style="font-size:14px; font-weight:bold; color:#555; display:block; margin-bottom:5px; text-align:left;">Select Your Local Currency:</label>
     <select id="paypal_currency_select" onchange="updatePayPalCurrencyEngine()" style="margin-bottom:15px;">
-      <option value="USD">USD ($) - US Dollar</option>
-      <option value="EUR">EUR (€) - Euro</option>
-      <option value="GBP">GBP (£) - British Pound</option>
+      <option value="USD" data-symbol="$" data-rate="83.50">USD - United States Dollar</option>
+      <option value="EUR" data-symbol="€" data-rate="90.10">EUR - Euro</option>
+      <option value="GBP" data-symbol="£" data-rate="106.30">GBP - Pound Sterling</option>
+      <option value="CAD" data-symbol="C$" data-rate="61.20">CAD - Canadian Dollar</option>
+      <option value="AUD" data-symbol="A$" data-rate="55.40">AUD - Australian Dollar</option>
+      <option value="JPY" data-symbol="¥" data-rate="0.53" data-zero="true">JPY - Japanese Yen (Zero-digit)</option>
+      <option value="NZD" data-symbol="NZ$" data-rate="51.10">NZD - New Zealand Dollar</option>
+      <option value="CHF" data-symbol="CHF" data-rate="93.80">CHF - Swiss Franc</option>
+      <option value="SGD" data-symbol="S$" data-rate="61.90">SGD - Singapore Dollar</option>
+      <option value="HKD" data-symbol="HK$" data-rate="10.70">HKD - Hong Kong Dollar</option>
+      <option value="MXN" data-symbol="Mex$" data-rate="4.95">MXN - Mexican Peso</option>
+      <option value="BRL" data-symbol="R$" data-rate="15.50">BRL - Brazilian Real</option>
+      <option value="MYR" data-symbol="RM" data-rate="17.70">MYR - Malaysian Ringgit</option>
+      <option value="CNY" data-symbol="¥" data-rate="11.50">CNY - Chinese Renminbi</option>
+      <option value="PHP" data-symbol="₱" data-rate="1.43">PHP - Philippine Peso</option>
+      <option value="PLN" data-symbol="zł" data-rate="20.80">PLN - Polish Złoty</option>
+      <option value="SEK" data-symbol="kr" data-rate="7.90">SEK - Swedish Krona</option>
+      <option value="NOK" data-symbol="kr" data-rate="7.85">NOK - Norwegian Krone</option>
+      <option value="DKK" data-symbol="kr" data-rate="12.10">DKK - Danish Krone</option>
+      <option value="CZK" data-symbol="Kč" data-rate="3.60">CZK - Czech Koruna</option>
+      <option value="HUF" data-symbol="Ft" data-rate="0.23" data-zero="true">HUF - Hungarian Forint (Zero-digit)</option>
+      <option value="ILS" data-symbol="₪" data-rate="22.40">ILS - Israeli New Shekel</option>
+      <option value="TWD" data-symbol="NT$" data-rate="2.58" data-zero="true">TWD - New Taiwan Dollar (Zero-digit)</option>
+      <option value="THB" data-symbol="฿" data-rate="2.28">THB - Thai Baht</option>
     </select>
 
     <p style="font-size:16px; color:#555; margin-bottom:20px;">Converted Payable Amount: <span style="font-weight:bold; color:#003087;"><span id="paypal_symbol">$</span><span id="paypal_converted_amt">0.00</span> <span id="paypal_txt_curr">USD</span></span></p>
     
+    <div id="paypal_loading_msg" style="color: #e65100; font-weight: bold; margin-bottom: 10px; display: none;">Loading secure buttons...</div>
     <div id="paypal-button-container"></div>
     <p onclick="backToShippingFromGate()" class="back-link" style="margin-top:20px; text-align:center;">← Change Payment Option</p>
   </div>
@@ -137,8 +159,9 @@
 </div>
 
 <script type="text/javascript">
-  var orderType_1 = ""; var finalAmt_1 = 0; 
+  var orderType_1 = ""; var finalAmt_1 = 0; var paypalButtonsInstance = null;
   var ACTIVE_API = "https://script.google.com/macros/s/AKfycbzS78vS2ptiA7B6_P_vjDXzqh597athdnwE7C9OAMBhFqrBRtUM71kR14PHfJ0bzLa1/exec";
+  var PAYPAL_CLIENT_ID = "AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
   
   const cashfree = Cashfree({ mode: "production" });
@@ -251,51 +274,68 @@
     document.getElementById('st2_1').style.display = 'none';
     document.getElementById('st3_paypal').style.display = 'block';
     
-    // ডিফল্টভাবে প্রথমে লোড হওয়ার সময় ডলার দিয়ে ক্যালকুলেশন শুরু হবে
     document.getElementById('paypal_currency_select').value = "USD";
     updatePayPalCurrencyEngine();
   }
 
-  // 🔄 কারেন্সি সিলেক্টর পরিবর্তনের সাথে সাথে লাইভ বাটন রিস্টার্ট করার মূল লজিক
+  // 🔄 Dynamic Multi-Currency Loader for PayPal
   function updatePayPalCurrencyEngine() {
-    let selectedCurr = document.getElementById('paypal_currency_select').value;
-    let rate = 84; // 1 USD = 84 INR (Base)
-    let symbol = "$";
+    let selectEl = document.getElementById('paypal_currency_select');
+    let selectedOption = selectEl.options[selectEl.selectedIndex];
     
-    if(selectedCurr === "EUR") { rate = 91; symbol = "€"; }
-    else if(selectedCurr === "GBP") { rate = 107; symbol = "£"; }
+    let selectedCurr = selectEl.value;
+    let symbol = selectedOption.getAttribute('data-symbol');
+    let rate = parseFloat(selectedOption.getAttribute('data-rate'));
+    let isZeroDigit = selectedOption.getAttribute('data-zero') === "true";
     
-    let convertedAmt = (finalAmt_1 / rate).toFixed(2);
+    // Live calculated price matching
+    let convertedAmt = (finalAmt_1 / rate);
+    convertedAmt = isZeroDigit ? Math.round(convertedAmt).toString() : convertedAmt.toFixed(2);
     
-    // স্ক্রিন লেবেল আপডেট
     document.getElementById('paypal_symbol').innerText = symbol;
     document.getElementById('paypal_converted_amt').innerText = convertedAmt;
     document.getElementById('paypal_txt_curr').innerText = selectedCurr;
     
     saveFormToLocalStorage();
-    
-    // পুরনো কন্টেইনার ফ্লাশ করে একদম ফ্রেশ নতুন কারেন্সি বাটন রেন্ডার করা হচ্ছে
+    document.getElementById('paypal_loading_msg').style.display = "block";
     document.getElementById('paypal-button-container').innerHTML = ''; 
-    paypal.Buttons({
-      createOrder: function(data, actions) {
-        return actions.order.create({
-          purchase_units: [{
-            amount: {
-              currency_code: selectedCurr, // কাস্টমারের সিলেক্ট করা ডাইনামিক কারেন্সি কোড পাস হচ্ছে
-              value: convertedAmt
-            }
-          }]
-        });
-      },
-      onApprove: function(data, actions) {
-        return actions.order.capture().then(function(details) {
-          executeSheetSaveAfterPayment(details.id, "PayPal " + selectedCurr + " Paid", symbol + convertedAmt + " " + selectedCurr);
-        });
-      },
-      onError: function(err) {
-        alert("PayPal Multi-Currency Gate Timeout.");
-      }
-    }).render('#paypal-button-container');
+
+    // Injecting dynamic configuration into the PayPal environment
+    if(window.paypal && paypalButtonsInstance) {
+       try { paypalButtonsInstance.close(); } catch(e){}
+    }
+
+    // Creating dynamic SDK script element to reload currency configuration instantly
+    let oldScript = document.getElementById('paypal_dynamic_sdk');
+    if(oldScript) oldScript.remove();
+
+    let script = document.createElement('script');
+    script.id = 'paypal_dynamic_sdk';
+    script.src = "https://www.paypal.com/sdk/js?client-id=" + PAYPAL_CLIENT_ID + "&currency=" + selectedCurr;
+    script.onload = function() {
+        document.getElementById('paypal_loading_msg').style.display = "none";
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  currency_code: selectedCurr,
+                  value: convertedAmt
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              executeSheetSaveAfterPayment(details.id, "PayPal " + selectedCurr + " Paid", symbol + convertedAmt + " " + selectedCurr);
+            });
+          },
+          onError: function(err) {
+            alert("PayPal Currency Session Conflict. Please refresh and retry.");
+          }
+        }).render('#paypal-button-container');
+    };
+    document.getElementById('paypal_sdk_container').appendChild(script);
   }
 
   // ⚡ Final Sheet Sync Engine
