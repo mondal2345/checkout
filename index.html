@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   
   <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
-  <script src="https://www.paypal.com/sdk/js?client-id=AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7&currency=USD"></script>
+  <script src="https://www.paypal.com/sdk/js?client-id=AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7"></script>
  
   <style>
     body { background-color: #fcfcfc; margin: 0; padding: 10px; }
@@ -72,11 +72,11 @@
         <input type="text" id="pin_1" placeholder="Postal / PIN Code *">
     </div>
     
-    <div class="section-headline">💳 Choose Your Payment Method:</div>
+    <div class="section-headline">65533 Choose Your Payment Method:</div>
     <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
        <button id="pay_loader_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
        <button class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
-       <button class="btn-orange" style="background: #003087; padding:15px; font-weight:bold;" onclick="goToPayPalStep()">🌍 Option C: Pay via PayPal (International USD)</button>
+       <button class="btn-orange" style="background: #003087; padding:15px; font-weight:bold;" onclick="goToPayPalStep()">🌍 Option C: Pay via PayPal (International Multi-Currency)</button>
     </div>
     
     <div style="display:flex; justify-content:space-between; margin-top:30px; border-top: 1px solid #eee; padding-top: 15px;">
@@ -98,7 +98,16 @@
 
   <div id="st3_paypal" class="step" style="background:#fff; border:1px solid #003087; padding:35px; border-radius:20px;">
     <h3 style="font-size:24px; color:#003087; font-weight:400; margin-bottom: 10px;">PayPal Global Secure Gate</h3>
-    <p style="font-size:15px; color:#555; margin-bottom:20px;">Converted Amount: <span style="font-weight:bold; color:#003087;">$<span id="paypal_usd_amt">0.00</span> USD</span></p>
+    
+    <label style="font-size:14px; font-weight:bold; color:#555; display:block; margin-bottom:5px; text-align:left;">Select Your Local Currency:</label>
+    <select id="paypal_currency_select" onchange="updatePayPalCurrencyEngine()" style="margin-bottom:15px;">
+      <option value="USD">USD ($) - US Dollar</option>
+      <option value="EUR">EUR (€) - Euro</option>
+      <option value="GBP">GBP (£) - British Pound</option>
+    </select>
+
+    <p style="font-size:16px; color:#555; margin-bottom:20px;">Converted Payable Amount: <span style="font-weight:bold; color:#003087;"><span id="paypal_symbol">$</span><span id="paypal_converted_amt">0.00</span> <span id="paypal_txt_curr">USD</span></span></p>
+    
     <div id="paypal-button-container"></div>
     <p onclick="backToShippingFromGate()" class="back-link" style="margin-top:20px; text-align:center;">← Change Payment Option</p>
   </div>
@@ -179,6 +188,7 @@
   function startOrder_1() { document.getElementById('st1_1').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
   function backToS1_1() { document.getElementById('st2_1').style.display = 'none'; document.getElementById('st1_1').style.display = 'block'; }
   function backToShippingFromGate() { document.getElementById('st3_manual_qr').style.display = 'none'; document.getElementById('st3_paypal').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
+  function clearForm_1() { ['name_','phone_','email_','addr_','loc_','pin_'].forEach(id => { if(document.getElementById(id+'1')) document.getElementById(id+'1').value = ""; }); }
 
   function validateShippingForm() {
     let fields = ['name_1', 'phone_1', 'email_1', 'addr_1', 'pin_1'];
@@ -195,7 +205,7 @@
     localStorage.setItem('m_email', document.getElementById('email_1').value);
   }
 
-  // 💳 Option A: Cashfree
+  // 💳 Option A: Cashfree Marchant Gate
   async function payViaCashfreeEngine() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('pay_loader_btn').innerText = "Opening Gateway...";
@@ -219,7 +229,7 @@
     }
   }
 
-  // 📱 Option B: UPI QR Code
+  // 📱 Option B: UPI QR Code Gate
   function goToManualQRStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
@@ -235,31 +245,55 @@
     await executeSheetSaveAfterPayment(trx, "UPI Manual Paid", "₹" + finalAmt_1);
   }
 
-  // 🌍 Option C: PayPal Engine
+  // 🌍 Option C: PayPal Multi-Currency Engine
   function goToPayPalStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
     document.getElementById('st3_paypal').style.display = 'block';
     
-    // Automatic Currency Conversion (1 USD = 84 INR Configuration)
-    let dollarAmt = (finalAmt_1 / 84).toFixed(2);
-    document.getElementById('paypal_usd_amt').innerText = dollarAmt;
-    saveFormToLocalStorage();
+    // ডিফল্টভাবে প্রথমে লোড হওয়ার সময় ডলার দিয়ে ক্যালকুলেশন শুরু হবে
+    document.getElementById('paypal_currency_select').value = "USD";
+    updatePayPalCurrencyEngine();
+  }
 
+  // 🔄 কারেন্সি সিলেক্টর পরিবর্তনের সাথে সাথে লাইভ বাটন রিস্টার্ট করার মূল লজিক
+  function updatePayPalCurrencyEngine() {
+    let selectedCurr = document.getElementById('paypal_currency_select').value;
+    let rate = 84; // 1 USD = 84 INR (Base)
+    let symbol = "$";
+    
+    if(selectedCurr === "EUR") { rate = 91; symbol = "€"; }
+    else if(selectedCurr === "GBP") { rate = 107; symbol = "£"; }
+    
+    let convertedAmt = (finalAmt_1 / rate).toFixed(2);
+    
+    // স্ক্রিন লেবেল আপডেট
+    document.getElementById('paypal_symbol').innerText = symbol;
+    document.getElementById('paypal_converted_amt').innerText = convertedAmt;
+    document.getElementById('paypal_txt_curr').innerText = selectedCurr;
+    
+    saveFormToLocalStorage();
+    
+    // পুরনো কন্টেইনার ফ্লাশ করে একদম ফ্রেশ নতুন কারেন্সি বাটন রেন্ডার করা হচ্ছে
     document.getElementById('paypal-button-container').innerHTML = ''; 
     paypal.Buttons({
       createOrder: function(data, actions) {
         return actions.order.create({
-          purchase_units: [{ amount: { value: dollarAmt } }]
+          purchase_units: [{
+            amount: {
+              currency_code: selectedCurr, // কাস্টমারের সিলেক্ট করা ডাইনামিক কারেন্সি কোড পাস হচ্ছে
+              value: convertedAmt
+            }
+          }]
         });
       },
       onApprove: function(data, actions) {
         return actions.order.capture().then(function(details) {
-          executeSheetSaveAfterPayment(details.id, "PayPal Global Paid", "$" + dollarAmt + " USD");
+          executeSheetSaveAfterPayment(details.id, "PayPal " + selectedCurr + " Paid", symbol + convertedAmt + " " + selectedCurr);
         });
       },
       onError: function(err) {
-        alert("PayPal Gateway Error or Transaction Cancelled.");
+        alert("PayPal Multi-Currency Gate Timeout.");
       }
     }).render('#paypal-button-container');
   }
