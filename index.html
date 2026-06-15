@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   
   <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
-  <div id="paypal_sdk_holder"></div>
  
   <style>
     body { background-color: #fcfcfc; margin: 0; padding: 10px; }
@@ -35,6 +34,8 @@
   </style>
 </head>
 <body>
+
+<div id="paypal_sdk_holder" style="display:none;"></div>
 
 <div class="card">
   <div id="st1_1">
@@ -72,7 +73,7 @@
         <input type="text" id="pin_1" placeholder="Postal / PIN Code *">
     </div>
     
-    <div class="section-headline">65533 Choose Your Payment Method:</div>
+    <div class="section-headline">💳 Choose Your Payment Method:</div>
     <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
        <button id="pay_loader_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
        <button class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
@@ -268,7 +269,7 @@
     await executeSheetSaveAfterPayment(trx, "UPI Manual Paid", "₹" + finalAmt_1);
   }
 
-  // 🌍 Option C: PayPal Multi-Currency Setup
+  // 🌍 Option C: PayPal Multi-Currency Engine Launch
   function goToPayPalStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
@@ -278,7 +279,7 @@
     updatePayPalCurrencyEngine();
   }
 
-  // 🔄 অফিশিয়াল ডাইনামিক স্ক্রিপ্ট রিলোডার মেকানিজম (যা কারেন্সি ক্যাশ কনফ্লিক্ট এক ক্লিকে চিরতরে মিটিয়ে দেবে)
+  // 🔄 Official Dynamic Script Reloader Mechanism
   function updatePayPalCurrencyEngine() {
     let selectEl = document.getElementById('paypal_currency_select');
     let selectedOption = selectEl.options[selectEl.selectedIndex];
@@ -288,32 +289,26 @@
     let rate = parseFloat(selectedOption.getAttribute('data-rate'));
     let isZeroDigit = selectedOption.getAttribute('data-zero') === "true";
     
-    // নিখুঁত লাইভ কারেন্সি কনভার্সন রেট হিসাব
     let convertedAmt = (finalAmt_1 / rate);
     convertedAmt = isZeroDigit ? Math.round(convertedAmt).toString() : convertedAmt.toFixed(2);
     
-    // স্ক্রিন ইন্টারফেস টেক্সট রেন্ডার
     document.getElementById('paypal_symbol').innerText = symbol;
     document.getElementById('paypal_converted_amt').innerText = convertedAmt;
     document.getElementById('paypal_txt_curr').innerText = selectedCurr;
     
     saveFormToLocalStorage();
     
-    // ১. কন্টেইনার ফ্লাশ এবং স্টেটাস অন করা
     document.getElementById('paypal_status_msg').style.display = "block";
     document.getElementById('paypal-button-container').innerHTML = ''; 
 
-    // ২. ব্রাউজার মেমোরি থেকে পুরনো লক করা পেপ্যাল অবজেক্ট এবং স্ক্রিপ্ট রিমুভ করা
     if(window.paypal) { delete window.paypal; }
     let oldScript = document.getElementById('paypal_live_core_sdk');
     if(oldScript) oldScript.remove();
 
-    // ৩. সম্পূর্ণ নতুন কারেন্সি কোড দিয়ে লাইভ স্ক্রিপ্ট ফাইল ইনজেক্ট করা হচ্ছে
     let script = document.createElement('script');
     script.id = 'paypal_live_core_sdk';
     script.src = "https://www.paypal.com/sdk/js?client-id=" + PAYPAL_CLIENT_ID + "&currency=" + selectedCurr;
     
-    // স্ক্রিপ্ট ফাইলটি সম্পূর্ণ রিলোড হওয়া মাত্রই বাটন ফায়ার করবে (১০০% পপ-আপ সচল উইন্ডো সহ)
     script.onload = function() {
         document.getElementById('paypal_status_msg').style.display = "none";
         
