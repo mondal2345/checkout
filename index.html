@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   
   <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+  <div id="paypal_sdk_holder" style="display:none;"></div>
  
   <style>
     body { background-color: #fcfcfc; margin: 0; padding: 10px; }
@@ -26,6 +27,8 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .section-headline { margin: 30px 0 15px 0; font-size: 18px; font-weight: 700; color: #333; text-align: left; }
     
+    #paypal-iframe-container { width: 100%; min-height: 350px; border: none; margin-top: 15px; }
+    
     @media print {
       body * { visibility: hidden; }
       #printable_invoice, #printable_invoice * { visibility: visible; }
@@ -34,8 +37,6 @@
   </style>
 </head>
 <body>
-
-<div id="paypal_sdk_holder" style="display:none;"></div>
 
 <div class="card">
   <div id="st1_1">
@@ -77,7 +78,8 @@
     <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
        <button id="pay_loader_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
        <button class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
-       <button class="btn-orange" style="background: #003087; padding:15px; font-weight:bold;" onclick="goToPayPalStep()">🌍 Option C: Pay via PayPal (International Multi-Currency)</button>
+       
+       <button id="paypal_global_btn" class="btn-orange" style="background: #003087; padding:15px; font-weight:bold; display:none;" onclick="goToPayPalStep()">🌍 Option C: Pay via PayPal (International Multi-Currency)</button>
     </div>
     
     <div style="display:flex; justify-content:space-between; margin-top:30px; border-top: 1px solid #eee; padding-top: 15px;">
@@ -107,7 +109,7 @@
       <option value="GBP" data-symbol="£" data-rate="106.30">GBP - Pound Sterling</option>
       <option value="CAD" data-symbol="C$" data-rate="61.20">CAD - Canadian Dollar</option>
       <option value="AUD" data-symbol="A$" data-rate="55.40">AUD - Australian Dollar</option>
-      <option value="JPY" data-symbol="¥" data-rate="0.53" data-zero="true">JPY - Japanese Yen</option>
+      <option value="JPY" data-symbol="¥" data-rate="0.53" data-zero="true">JPY - Japanese Yen (Zero-digit)</option>
       <option value="NZD" data-symbol="NZ$" data-rate="51.10">NZD - New Zealand Dollar</option>
       <option value="CHF" data-symbol="CHF" data-rate="93.80">CHF - Swiss Franc</option>
       <option value="SGD" data-symbol="S$" data-rate="61.90">SGD - Singapore Dollar</option>
@@ -122,16 +124,16 @@
       <option value="NOK" data-symbol="kr" data-rate="7.85">NOK - Norwegian Krone</option>
       <option value="DKK" data-symbol="kr" data-rate="12.10">DKK - Danish Krone</option>
       <option value="CZK" data-symbol="Kč" data-rate="3.60">CZK - Czech Koruna</option>
-      <option value="HUF" data-symbol="Ft" data-rate="0.23" data-zero="true">HUF - Hungarian Forint</option>
+      <option value="HUF" data-symbol="Ft" data-rate="0.23" data-zero="true">HUF - Hungarian Forint (Zero-digit)</option>
       <option value="ILS" data-symbol="₪" data-rate="22.40">ILS - Israeli New Shekel</option>
-      <option value="TWD" data-symbol="NT$" data-rate="2.58" data-zero="true">TWD - New Taiwan Dollar</option>
+      <option value="TWD" data-symbol="NT$" data-rate="2.58" data-zero="true">TWD - New Taiwan Dollar (Zero-digit)</option>
       <option value="THB" data-symbol="฿" data-rate="2.28">THB - Thai Baht</option>
     </select>
 
     <p style="font-size:16px; color:#555; margin-bottom:20px;">Converted Payable Amount: <span style="font-weight:bold; color:#003087;"><span id="paypal_symbol">$</span><span id="paypal_converted_amt">0.00</span> <span id="paypal_txt_curr">USD</span></span></p>
     
     <div id="paypal_status_msg" style="color: #e65100; font-weight: bold; font-size:14px; margin-bottom:15px; display:none;">🔄 Syncing secure network buttons...</div>
-    <div id="paypal-button-container"></div>
+    <iframe id="paypal-iframe-container"></iframe>
     <p onclick="backToShippingFromGate()" class="back-link" style="margin-top:20px; text-align:center;">← Change Payment Option</p>
   </div>
 
@@ -160,7 +162,7 @@
 </div>
 
 <script type="text/javascript">
-  var orderType_1 = ""; var finalAmt_1 = 0; 
+  var orderType_1 = ""; var finalAmt_1 = 0; var foreignBaseAmt = 0; 
   var ACTIVE_API = "https://script.google.com/macros/s/AKfycbzS78vS2ptiA7B6_P_vjDXzqh597athdnwE7C9OAMBhFqrBRtUM71kR14PHfJ0bzLa1/exec";
   var PAYPAL_CLIENT_ID = "AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
@@ -183,8 +185,24 @@
       if (params.has('sku') || params.has('title')) {
         let price = parseFloat(params.get('price')) || 0;
         let qty = parseInt(params.get('orderqty')) || 1;
+        
+        // ⚡ ১. পিওর ক্যারেক্টার ফিল্টারিং (ফাঁকা টেক্সট স্ক্র্যাপ করার লজিক যা ভুল পেপ্যাল এড়াবে)
+        let rawFPrice = params.get('f_price');
+        let fPriceParam = 0;
+        if (rawFPrice && rawFPrice.trim() !== "" && rawFPrice !== "null" && rawFPrice !== "undefined") {
+          fPriceParam = parseFloat(rawFPrice) || 0;
+        }
+        
         finalAmt_1 = price * qty;
         orderType_1 = params.get('type') || 'Retail';
+        
+        // যদি শিটের FOREIGN_PRICE ঘরটি রিয়েল ভ্যালু ধারণ করে, তবেই পেপ্যাল বোতাম স্ক্রিনে আসবে
+        if(fPriceParam > 0) {
+           foreignBaseAmt = fPriceParam * qty;
+           document.getElementById('paypal_global_btn').style.display = "block";
+        } else {
+           document.getElementById('paypal_global_btn').style.display = "none";
+        }
 
         document.getElementById('lbl_title').innerText = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
         document.getElementById('lbl_sku').innerText = params.get('sku') || '-';
@@ -212,7 +230,12 @@
   function startOrder_1() { document.getElementById('st1_1').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
   function backToS1_1() { document.getElementById('st2_1').style.display = 'none'; document.getElementById('st1_1').style.display = 'block'; }
   function backToShippingFromGate() { document.getElementById('st3_manual_qr').style.display = 'none'; document.getElementById('st3_paypal').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
-  function clearForm_1() { ['name_','phone_','email_','addr_','loc_','pin_'].forEach(id => { if(document.getElementById(id+'1')) document.getElementById(id+'1').value = ""; }); }
+
+  window.addEventListener("message", function(event) {
+    if (event.data && event.data.type === "PAYPAL_SUCCESS") {
+      executeSheetSaveAfterPayment(event.data.id, "PayPal " + event.data.currency + " Paid", event.data.amountDisplay);
+    }
+  }, false);
 
   function validateShippingForm() {
     let fields = ['name_1', 'phone_1', 'email_1', 'addr_1', 'pin_1'];
@@ -229,12 +252,11 @@
     localStorage.setItem('m_email', document.getElementById('email_1').value);
   }
 
-  // 💳 Option A: Cashfree Marchant Gate
+  // 💳 Option A: Cashfree
   async function payViaCashfreeEngine() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('pay_loader_btn').innerText = "Opening Gateway...";
     document.getElementById('pay_loader_btn').disabled = true;
-
     saveFormToLocalStorage();
     let sessionUrl = ACTIVE_API + "?action=createCashfreeOrder&amount=" + finalAmt_1 + "&cust_name=" + encodeURIComponent(document.getElementById('name_1').value) + "&cust_phone=" + document.getElementById('phone_1').value + "&cust_email=" + encodeURIComponent(document.getElementById('email_1').value);
     try {
@@ -243,17 +265,17 @@
       if(orderData.payment_session_id) {
         cashfree.checkout({ paymentSessionId: orderData.payment_session_id, redirectTarget: "_top" });
       } else {
-        alert("Gateway processing error. Please choose Option B or C.");
+        alert("Gateway processing error. Please choose Option B.");
         document.getElementById('pay_loader_btn').innerText = "💳 Option A: Pay via Cashfree Gateway (INR)";
         document.getElementById('pay_loader_btn').disabled = false;
       }
     } catch (err) {
-      alert("Gateway Error. Choose Option B or C.");
+      alert("Gateway Error.");
       document.getElementById('pay_loader_btn').disabled = false;
     }
   }
 
-  // 📱 Option B: UPI QR Code Gate
+  // 📱 Option B: UPI QR
   function goToManualQRStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
@@ -269,17 +291,15 @@
     await executeSheetSaveAfterPayment(trx, "UPI Manual Paid", "₹" + finalAmt_1);
   }
 
-  // 🌍 Option C: PayPal Multi-Currency Engine Launch
+  // 🌍 Option C: PayPal Multi-Currency Engine
   function goToPayPalStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
     document.getElementById('st3_paypal').style.display = 'block';
-    
     document.getElementById('paypal_currency_select').value = "USD";
     updatePayPalCurrencyEngine();
   }
 
-  // 🔄 Official Dynamic Script Reloader Mechanism
   function updatePayPalCurrencyEngine() {
     let selectEl = document.getElementById('paypal_currency_select');
     let selectedOption = selectEl.options[selectEl.selectedIndex];
@@ -289,7 +309,7 @@
     let rate = parseFloat(selectedOption.getAttribute('data-rate'));
     let isZeroDigit = selectedOption.getAttribute('data-zero') === "true";
     
-    let convertedAmt = (finalAmt_1 / rate);
+    let convertedAmt = (foreignBaseAmt / rate);
     convertedAmt = isZeroDigit ? Math.round(convertedAmt).toString() : convertedAmt.toFixed(2);
     
     document.getElementById('paypal_symbol').innerText = symbol;
@@ -297,11 +317,8 @@
     document.getElementById('paypal_txt_curr').innerText = selectedCurr;
     
     saveFormToLocalStorage();
-    
     document.getElementById('paypal_status_msg').style.display = "block";
-    document.getElementById('paypal-button-container').innerHTML = ''; 
-
-    if(window.paypal) { delete window.paypal; }
+    
     let oldScript = document.getElementById('paypal_live_core_sdk');
     if(oldScript) oldScript.remove();
 
@@ -311,30 +328,38 @@
     
     script.onload = function() {
         document.getElementById('paypal_status_msg').style.display = "none";
+        document.getElementById('paypal-iframe-container').contentWindow.document.open();
         
-        paypal.Buttons({
-          createOrder: function(data, actions) {
-            return actions.order.create({
-              purchase_units: [{
-                amount: {
-                  currency_code: selectedCurr,
-                  value: convertedAmt
+        let iframeHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <script src="https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=${selectedCurr}"><\/script>
+            <style>body { margin: 0; display: flex; justify-content: center; }</style>
+          </head>
+          <body>
+            <div id="btn" style="width:100%; max-width:320px; margin-top:10px;"></div>
+            <script>
+              paypal.Buttons({
+                createOrder: function(data, actions) {
+                  return actions.order.create({ purchase_units: [{ amount: { currency_code: "${selectedCurr}", value: "${convertedAmt}" } }] });
+                },
+                onApprove: function(data, actions) {
+                  return actions.order.capture().then(function(d) {
+                    window.parent.postMessage({ type: "PAYPAL_SUCCESS", id: d.id, currency: "${selectedCurr}", amountDisplay: "${symbol}${convertedAmt} ${selectedCurr}" }, "*");
+                  });
                 }
-              }]
-            });
-          },
-          onApprove: function(data, actions) {
-            return actions.order.capture().then(function(details) {
-              executeSheetSaveAfterPayment(details.id, "PayPal " + selectedCurr + " Paid", symbol + convertedAmt + " " + selectedCurr);
-            });
-          }
-        }).render('#paypal-button-container');
+              }).render('#btn');
+            <\/script>
+          </body>
+          </html>
+        `;
+        document.getElementById('paypal-iframe-container').contentWindow.document.write(iframeHtml);
+        document.getElementById('paypal-iframe-container').contentWindow.document.close();
     };
-    
     document.getElementById('paypal_sdk_holder').appendChild(script);
   }
 
-  // ⚡ Final Sheet Sync Engine
   async function executeSheetSaveAfterPayment(payId, payMethodText, amountDisplay) {
     let today = new Date().toLocaleString();
     let bTitle = document.getElementById('lbl_title').innerText || "Book Item";
@@ -355,7 +380,6 @@
     
     try {
       await fetch(ACTIVE_API, { method: "POST", mode: "no-cors", body: p });
-      
       document.getElementById('st3_manual_qr').style.display = 'none';
       document.getElementById('st3_paypal').style.display = 'none';
       
@@ -373,7 +397,6 @@
 
       let waMsg = `*Mondal Book Store - Invoice* \n\n*Order ID:* ${payId}\n*Book:* ${bTitle}\n*Amount:* ${amountDisplay}\n*Status:* Confirmed`;
       document.getElementById('wa_share_btn').href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(waMsg);
-
       document.getElementById('success_box_1').style.display = 'block';
     } catch(e) {
       document.getElementById('success_box_1').style.display = 'block';
