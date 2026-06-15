@@ -26,8 +26,6 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .section-headline { margin: 30px 0 15px 0; font-size: 18px; font-weight: 700; color: #333; text-align: left; }
     
-    #paypal-iframe-container { width: 100%; min-height: 350px; border: none; margin-top: 15px; transition: all 0.3s ease; }
-    
     @media print {
       body * { visibility: hidden; }
       #printable_invoice, #printable_invoice * { visibility: visible; }
@@ -36,6 +34,8 @@
   </style>
 </head>
 <body>
+
+<div id="paypal_sdk_holder" style="display:none;"></div>
 
 <div class="card">
   <div id="st1_1">
@@ -121,7 +121,7 @@
       <option value="SEK" data-symbol="kr" data-rate="7.90">SEK - Swedish Krona</option>
       <option value="NOK" data-symbol="kr" data-rate="7.85">NOK - Norwegian Krone</option>
       <option value="DKK" data-symbol="kr" data-rate="12.10">DKK - Danish Krone</option>
-      <option value="CZK" data-symbol="Kč" data-rate="3.60">CZK - Czech Coruna</option>
+      <option value="CZK" data-symbol="Kč" data-rate="3.60">CZK - Czech Koruna</option>
       <option value="HUF" data-symbol="Ft" data-rate="0.23" data-zero="true">HUF - Hungarian Forint (Zero-digit)</option>
       <option value="ILS" data-symbol="₪" data-rate="22.40">ILS - Israeli New Shekel</option>
       <option value="TWD" data-symbol="NT$" data-rate="2.58" data-zero="true">TWD - New Taiwan Dollar (Zero-digit)</option>
@@ -130,8 +130,8 @@
 
     <p style="font-size:16px; color:#555; margin-bottom:20px;">Converted Payable Amount: <span style="font-weight:bold; color:#003087;"><span id="paypal_symbol">$</span><span id="paypal_converted_amt">0.00</span> <span id="paypal_txt_curr">USD</span></span></p>
     
-    <iframe id="paypal-iframe-container"></iframe>
-    
+    <div id="paypal_status_msg" style="color: #e65100; font-weight: bold; font-size:14px; margin-bottom:15px; display:none;">🔄 Syncing secure network buttons...</div>
+    <div id="paypal-button-container"></div>
     <p onclick="backToShippingFromGate()" class="back-link" style="margin-top:20px; text-align:center;">← Change Payment Option</p>
   </div>
 
@@ -212,13 +212,7 @@
   function startOrder_1() { document.getElementById('st1_1').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
   function backToS1_1() { document.getElementById('st2_1').style.display = 'none'; document.getElementById('st1_1').style.display = 'block'; }
   function backToShippingFromGate() { document.getElementById('st3_manual_qr').style.display = 'none'; document.getElementById('st3_paypal').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
-  
-  // Cross-domain postMessage listener to listen to successful transaction inside iframe
-  window.addEventListener("message", function(event) {
-    if (event.data && event.data.type === "PAYPAL_SUCCESS") {
-      executeSheetSaveAfterPayment(event.data.id, "PayPal " + event.data.currency + " Paid", event.data.amountDisplay);
-    }
-  }, false);
+  function clearForm_1() { ['name_','phone_','email_','addr_','loc_','pin_'].forEach(id => { if(document.getElementById(id+'1')) document.getElementById(id+'1').value = ""; }); }
 
   function validateShippingForm() {
     let fields = ['name_1', 'phone_1', 'email_1', 'addr_1', 'pin_1'];
@@ -235,11 +229,12 @@
     localStorage.setItem('m_email', document.getElementById('email_1').value);
   }
 
-  // 💳 Option A: Cashfree
+  // 💳 Option A: Cashfree Marchant Gate
   async function payViaCashfreeEngine() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('pay_loader_btn').innerText = "Opening Gateway...";
     document.getElementById('pay_loader_btn').disabled = true;
+
     saveFormToLocalStorage();
     let sessionUrl = ACTIVE_API + "?action=createCashfreeOrder&amount=" + finalAmt_1 + "&cust_name=" + encodeURIComponent(document.getElementById('name_1').value) + "&cust_phone=" + document.getElementById('phone_1').value + "&cust_email=" + encodeURIComponent(document.getElementById('email_1').value);
     try {
@@ -253,12 +248,12 @@
         document.getElementById('pay_loader_btn').disabled = false;
       }
     } catch (err) {
-      alert("Gateway Error.");
+      alert("Gateway Error. Choose Option B or C.");
       document.getElementById('pay_loader_btn').disabled = false;
     }
   }
 
-  // 📱 Option B: UPI QR
+  // 📱 Option B: UPI QR Code Gate
   function goToManualQRStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
@@ -274,16 +269,17 @@
     await executeSheetSaveAfterPayment(trx, "UPI Manual Paid", "₹" + finalAmt_1);
   }
 
-  // 🌍 Option C: PayPal Multi-Currency Setup
+  // 🌍 Option C: PayPal Multi-Currency Engine Launch
   function goToPayPalStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
     document.getElementById('st3_paypal').style.display = 'block';
+    
     document.getElementById('paypal_currency_select').value = "USD";
     updatePayPalCurrencyEngine();
   }
 
-  // 🔄 The ultimate dynamic sandbox reloader using data URI injection mechanism
+  // 🔄 Official Dynamic Script Reloader Mechanism
   function updatePayPalCurrencyEngine() {
     let selectEl = document.getElementById('paypal_currency_select');
     let selectedOption = selectEl.options[selectEl.selectedIndex];
@@ -301,45 +297,41 @@
     document.getElementById('paypal_txt_curr').innerText = selectedCurr;
     
     saveFormToLocalStorage();
+    
+    document.getElementById('paypal_status_msg').style.display = "block";
+    document.getElementById('paypal-button-container').innerHTML = ''; 
 
-    // Isolated sandbox payload string
-    let iframeHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script src="https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=${selectedCurr}"><\/script>
-        <style>body { margin: 0; padding: 10px; display: flex; justify-content: center; align-items: center; background: transparent; }</style>
-      </head>
-      <body>
-        <div id="btn-container" style="width: 100%; max-width: 350px;"></div>
-        <script>
-          paypal.Buttons({
-            createOrder: function(data, actions) {
-              return actions.order.create({
-                purchase_units: [{ amount: { currency_code: "${selectedCurr}", value: "${convertedAmt}" } }]
-              });
-            },
-            onApprove: function(data, actions) {
-              return actions.order.capture().then(function(details) {
-                window.parent.postMessage({
-                  type: "PAYPAL_SUCCESS",
-                  id: details.id,
-                  currency: "${selectedCurr}",
-                  amountDisplay: "${symbol}${convertedAmt} ${selectedCurr}"
-                }, "*");
-              });
-            }
-          }).render('#btn-container');
-        <\/script>
-      </body>
-      </html>
-    `;
+    if(window.paypal) { delete window.paypal; }
+    let oldScript = document.getElementById('paypal_live_core_sdk');
+    if(oldScript) oldScript.remove();
 
-    // Resetting iframe directly using data source endpoint to guarantee fresh caching session
-    let iframe = document.getElementById('paypal-iframe-container');
-    iframe.src = "data:text/html;charset=utf-8," + encodeURIComponent(iframeHtml);
+    let script = document.createElement('script');
+    script.id = 'paypal_live_core_sdk';
+    script.src = "https://www.paypal.com/sdk/js?client-id=" + PAYPAL_CLIENT_ID + "&currency=" + selectedCurr;
+    
+    script.onload = function() {
+        document.getElementById('paypal_status_msg').style.display = "none";
+        
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  currency_code: selectedCurr,
+                  value: convertedAmt
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              executeSheetSaveAfterPayment(details.id, "PayPal " + selectedCurr + " Paid", symbol + convertedAmt + " " + selectedCurr);
+            });
+          }
+        }).render('#paypal-button-container');
+    };
+    
+    document.getElementById('paypal_sdk_holder').appendChild(script);
   }
 
   // ⚡ Final Sheet Sync Engine
