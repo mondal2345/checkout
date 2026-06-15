@@ -8,26 +8,14 @@
  
   <style>
     body { background-color: #fcfcfc; margin: 0; padding: 10px; }
-    .card {
-      font-family: 'Tinos', serif;
-      text-align: center; border: 1px solid #eee;
-      padding: 35px; max-width: 750px;
-      margin: 20px auto; border-radius: 20px;
-      background: #ffffff; box-shadow: 0 15px 40px rgba(0,0,0,0.03);
-      box-sizing: border-box;
-    }
+    .card { font-family: 'Tinos', serif; text-align: center; border: 1px solid #eee; padding: 35px; max-width: 750px; margin: 20px auto; border-radius: 20px; background: #ffffff; box-shadow: 0 15px 40px rgba(0,0,0,0.03); box-sizing: border-box; }
     h2 { color: #222; margin: 0 0 25px 0; font-size: 26px; font-weight: 400; line-height: 1.4; }
     .spec-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 16px; text-align: left; }
     .spec-table td { padding: 10px; border-bottom: 1px solid #f0f0f0; }
     .spec-label { font-weight: bold; color: #555; width: 30%; }
-    input, select, textarea {
-      width: 100%; padding: 12px; margin: 8px 0;
-      border: 1px solid #ddd; border-radius: 8px;
-      box-sizing: border-box; font-size: 16px;
-      font-family: 'Tinos', serif;
-    }
+    input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-family: 'Tinos', serif; }
     .btn-blue { background: #1a73e8; color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; width: 100%; font-size: 18px; }
-    .btn-green { background: #2e7d32; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; }
+    .btn-green { background: #2e7d32; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; text-decoration: none; display: block; }
     .btn-orange { background: #e65100; color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 19px; }
     .payable-container { font-size: 20px; margin: 25px 0; text-align: center; color: #444; font-weight: bold; }
     .payable-amount { color: #2e7d32; font-size: 26px; }
@@ -35,6 +23,12 @@
     .step { display: none; animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .section-headline { margin: 30px 0 15px 0; font-size: 18px; font-weight: 700; color: #333; text-align: left; }
+    
+    @media print {
+      body * { visibility: hidden; }
+      #printable_invoice, #printable_invoice * { visibility: visible; }
+      #printable_invoice { position: absolute; left: 0; top: 0; width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -42,7 +36,6 @@
 <div class="card">
   <div id="st1_1">
     <h2 id="lbl_title">Loading Order Summary...</h2>
-    
     <div class="section-headline">📋 Book Specifications (Prefilled)</div>
     <table class="spec-table">
       <tr><td class="spec-label">SKU:</td><td id="lbl_sku">-</td></tr>
@@ -55,11 +48,9 @@
       <tr><td class="spec-label">Unit Price:</td><td style="font-weight: bold; color: #2e7d32;">₹<span id="lbl_base_price">0</span></td></tr>
       <tr><td class="spec-label">Selected Qty:</td><td id="lbl_order_qty" style="font-weight: bold;">1</td></tr>
     </table>
-
     <div class="payable-container" style="background: #f4f9f4; padding: 15px; border-radius: 8px;">
       Total Payable Amount: <span id="sum_price_1" class="payable-amount">₹0</span>
     </div>
-    
     <button class="btn-orange" onclick="startOrder_1()">CONTINUE TO SHIPPING ADDRESS</button>
   </div>
 
@@ -73,7 +64,7 @@
     </div>
     <input type="email" id="email_1" placeholder="Email Address *">
     <div id="extra_box_1">
-        <textarea id="addr_1" placeholder="Full Delivery Address *" style="height:90px;"></textarea>
+        <textarea id="addr_1" placeholder="Full Delivery Address *" style="height:90pxpartial;"></textarea>
         <input type="text" id="pin_1" placeholder="Postal / PIN Code *">
     </div>
     <button class="btn-blue" style="margin-top: 15px;" onclick="goToStep3_1()">GENERATE PAYMENT QR</button>
@@ -90,33 +81,43 @@
       <p class="amount-text" style="color:#2e7d32; margin-top:20px; font-size: 24px; font-weight: bold;">₹<span id="qv_1">0</span></p>
     </div>
     <p style="font-size: 13px; color: #666; margin-bottom: 15px; text-align: left;">
-      ⚠️ <b>Important:</b> After payment, enter your 12-digit UPI UTR / Ref No. below.
+      ⚠️ পেমেন্ট করার পর ট্রানজেকশন আইডি (UTR) নিচে ইনপুট করুন। একটি কপি আপনার ইমেইলেও যাবে।
     </p>
     <input type="text" id="trx_1" placeholder="Enter 12-digit UPI Transaction ID / UTR *">
     <button id="final_btn_1" class="btn-blue" style="margin-top:15px; background: #2e7d32;" onclick="submitFinal_1()">CONFIRM ORDER</button>
   </div>
 
-  <div id="success_box_1" class="step" style="padding:50px 20px; border:1px solid #2e7d32; border-radius:20px; background: #fafdfa;">
-     <h2 style="color:#2e7d32; font-size:30px; margin-bottom: 10px;">✓ Order Placed Successfully!</h2>
-     <p style="font-size:16px; color:#555; margin-bottom: 30px;">Your order has been recorded in our system.</p>
+  <div id="success_box_1" class="step" style="padding:20px 10px;">
+     <div id="printable_invoice" style="border: 2px dashed #1a73e8; padding: 20px; background: #fafafa; border-radius: 12px; text-align: left; font-size: 14px; margin-bottom: 25px;">
+       <h3 style="text-align:center; color:#1a73e8; margin-top:0; font-size: 20px;">🧾 Mondal Book Store<br><span style="font-size:12px; font-weight:normal; color:#666;">Order Payment Receipt</span></h3>
+       <hr style="border-top: 1px dashed #ccc; margin: 15px 0;">
+       <p><b>Order ID:</b> <span id="inv_id">-</span></p>
+       <p><b>Date:</b> <span id="inv_date">-</span></p>
+       <p><b>UTR No (Txn ID):</b> <span id="inv_txid" style="color:green; font-weight:bold;">-</span></p>
+       <p><b>Book Details:</b> <span id="inv_book">-</span></p>
+       <p><b>Total Paid:</b> <span style="color:#2e7d32; font-weight:bold;">₹<span id="inv_total">0</span></span></p>
+       <hr style="border-top: 1px solid #eee;">
+       <p><b>Shipping Name:</b> <span id="inv_name">-</span></p>
+       <p><b>Mobile:</b> <span id="inv_phone">-</span></p>
+       <p><b>Address:</b> <span id="inv_address">-</span></p>
+       <p style="text-align: center; color: green; font-size: 11px; margin-top: 15px;">✓ A confirmation copy has been sent to your email!</p>
+     </div>
      
-     <a href="https://www.mondalbooks.com/" style="text-decoration: none;">
-        <button class="btn-green" style="width:250px; margin:auto; display:block; background: #2e7d32; font-weight: bold; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(46,125,50,0.2);">
-           ← BACK TO BOOK STORE
-        </button>
-     </a>
+     <div style="display:flex; flex-direction:column; gap:12px; max-width:300px; margin:auto;">
+       <button class="btn-blue" onclick="window.print()" style="background:#7f8c8d;">🖨️ Download / Print PDF</button>
+       <a id="wa_share_btn" target="_blank" class="btn-green" style="background:#25D366; font-weight:bold;">💬 Receive Copy on WhatsApp</a>
+       <a href="https://www.mondalbooks.com/" class="btn-blue" style="background:#1a73e8; font-weight:bold;">← Continue Shopping</a>
+     </div>
   </div>
+</div>
 
 <script type="text/javascript">
   var apiData_1 = null; var orderType_1 = ""; var finalAmt_1 = 0; var ACTIVE_API = "";
-  var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","Saudi Arabia":"+966","UAE":"+971","UK":"+44","USA":"+1"};
+  var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
 
-  // 🚀 গিটহাবের জন্য আল্ট্রা-ফাস্ট ইউআরএল প্যারামিটার পার্সার (১০০% ক্যাশ প্রুফ)
   function getLiveMondalURLParams() {
     let rawUrl = window.location.href;
-    let queryPart = "";
-    if (rawUrl.includes('?')) queryPart = rawUrl.split('?')[1];
-    else if (rawUrl.includes('#')) queryPart = rawUrl.split('#')[1];
+    let queryPart = rawUrl.includes('?') ? rawUrl.split('?')[1] : (rawUrl.includes('#') ? rawUrl.split('#')[1] : "");
     return new URLSearchParams(queryPart);
   }
 
@@ -126,7 +127,6 @@
         let g = await fetch("https://gist.githubusercontent.com/mondal2345/244937bf868c35944d98849dc873ee88/raw/a92ed019c9c038ece4033d9bf6e3eeb8624a3a01/api_gateway.txt"); 
         ACTIVE_API = (await g.text()).trim();
       }
-
       const params = getLiveMondalURLParams();
       if (params.has('sku') || params.has('title')) {
         let price = parseFloat(params.get('price')) || 0;
@@ -149,74 +149,62 @@
         let cs = document.getElementById('c_select_1');
         if (cs && cs.innerHTML === '') {
           Object.keys(dialCodes).forEach(c => { cs.innerHTML += '<option value="'+c+'">'+c+'</option>'; });
-          cs.value = "India";
-          updateDial_1();
+          cs.value = "India"; updateDial_1();
         }
       }
-    } catch(e) { console.log(e); }
+    } catch(e) {}
   }
-
-  // গিটহাবে পেজ খোলার সাথে সাথেই ডেটা রেন্ডার হয়ে যাবে
   window.addEventListener('DOMContentLoaded', loadAndPrefillEngine);
-  window.addEventListener('load', loadAndPrefillEngine);
 
-  function updateDial_1() { 
-    let c = document.getElementById('c_select_1').value; 
-    document.getElementById('code_1').value = dialCodes[c] || "+"; 
-  }
-
-  function startOrder_1() {
-    document.getElementById('st1_1').style.display = 'none'; 
-    document.getElementById('st2_1').style.display = 'block';
-  }
-
-  function backToS1_1() { 
-    document.getElementById('st2_1').style.display = 'none'; 
-    document.getElementById('st1_1').style.display = 'block'; 
-  }
-  
-  function clearForm_1() { 
-    ['name_','phone_','email_','addr_','pin_'].forEach(id => { 
-      if(document.getElementById(id+'1')) document.getElementById(id+'1').value = ""; 
-    }); 
-  }
+  function updateDial_1() { let c = document.getElementById('c_select_1').value; document.getElementById('code_1').value = dialCodes[c] || "+"; }
+  function startOrder_1() { document.getElementById('st1_1').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
+  function backToS1_1() { document.getElementById('st2_1').style.display = 'none'; document.getElementById('st1_1').style.display = 'block'; }
+  function clearForm_1() { ['name_','phone_','email_','addr_','pin_'].forEach(id => { if(document.getElementById(id+'1')) document.getElementById(id+'1').value = ""; }); }
 
   function goToStep3_1() {
-    if(!document.getElementById('name_1').value || !document.getElementById('phone_1').value || !document.getElementById('email_1').value || !document.getElementById('addr_1').value || !document.getElementById('pin_1').value) { 
-      alert("Please fill all required fields!"); 
-      return; 
-    }
-    document.getElementById('st2_1').style.display = 'none'; 
-    document.getElementById('st3_1').style.display = 'block';
-    
+    if(!document.getElementById('name_1').value || !document.getElementById('phone_1').value || !document.getElementById('email_1').value || !document.getElementById('addr_1').value || !document.getElementById('pin_1').value) { alert("Please fill all required fields!"); return; }
+    document.getElementById('st2_1').style.display = 'none'; document.getElementById('st3_1').style.display = 'block';
     document.getElementById('qr_1').src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent("upi://pay?pa=contactsmondal@oksbi&pn=MondalBooks&am=" + finalAmt_1 + "&tn=MB" + Math.floor(100000 + Math.random() * 900000));
     document.getElementById('qv_1').innerText = finalAmt_1;
   }
 
   async function submitFinal_1() {
-    let trx = document.getElementById('trx_1').value.trim(); 
-    if(!trx) return alert("Enter 12-digit UPI UTR ID!");
-    
-    document.getElementById('final_btn_1').innerText = "Processing...";
+    let trx = document.getElementById('trx_1').value.trim(); if(!trx) return alert("Enter 12-digit UPI UTR ID!");
+    document.getElementById('final_btn_1').innerText = "Processing Order...";
     document.getElementById('final_btn_1').disabled = true;
 
+    let orderId = "MB" + Math.floor(100000 + Math.random() * 900000);
+    let today = new Date().toLocaleString();
+    let bTitle = document.getElementById('lbl_title').innerText;
+    let bSku = document.getElementById('lbl_sku').innerText;
+    let cName = document.getElementById('name_1').value;
+    let cPhone = document.getElementById('code_1').value + " " + document.getElementById('phone_1').value;
+    let cAddress = document.getElementById('addr_1').value + ", PIN: " + document.getElementById('pin_1').value + " (" + document.getElementById('c_select_1').value + ")";
+
     let p = new URLSearchParams();
-    p.append("action", "saveOrder"); 
-    p.append("order_date", new Date().toLocaleDateString()); 
-    p.append("book_title", document.getElementById('lbl_title').innerText + " (" + document.getElementById('lbl_sku').innerText + ")");
-    p.append("cust_name", document.getElementById('name_1').value);
-    p.append("country_code", document.getElementById('code_1').value);
-    p.append("cust_phone", document.getElementById('phone_1').value);
-    p.append("cust_email", document.getElementById('email_1').value);
-    p.append("cust_address", document.getElementById('addr_1').value);
-    p.append("cust_pin", document.getElementById('pin_1').value);
-    p.append("trx_id", trx); 
-    p.append("order_type", orderType_1 + " Order [Qty: " + document.getElementById('lbl_order_qty').innerText + "]");
-    p.append("country", document.getElementById('c_select_1').value);
-    p.append("final_amount", "INR " + finalAmt_1);
+    p.append("action", "saveOrder"); p.append("order_date", today); p.append("book_title", bTitle + " (" + bSku + ")");
+    p.append("cust_name", cName); p.append("country_code", document.getElementById('code_1').value); p.append("cust_phone", document.getElementById('phone_1').value);
+    p.append("cust_email", document.getElementById('email_1').value); p.append("cust_address", document.getElementById('addr_1').value); p.append("cust_pin", document.getElementById('pin_1').value);
+    p.append("trx_id", trx); p.append("order_type", orderType_1 + " [Qty: " + document.getElementById('lbl_order_qty').innerText + "]");
+    p.append("country", document.getElementById('c_select_1').value); p.append("final_amount", "INR " + finalAmt_1);
     
     try {
       await fetch(ACTIVE_API, { method: "POST", mode: "no-cors", body: p });
+      
+      // ইনভয়েস ভিউ জেনারেশন
+      document.getElementById('inv_id').innerText = orderId;
+      document.getElementById('inv_date').innerText = today;
+      document.getElementById('inv_txid').innerText = trx;
+      document.getElementById('inv_book').innerText = bTitle + " [SKU: "+bSku+", Qty: "+document.getElementById('lbl_order_qty').innerText+"]";
+      document.getElementById('inv_total').innerText = finalAmt_1;
+      document.getElementById('inv_name').innerText = cName;
+      document.getElementById('inv_phone').innerText = cPhone;
+      document.getElementById('inv_address').innerText = cAddress;
+
+      // 💬 হোয়াটসঅ্যাপ নোটিফিকেশন এপিআই জেনারেশন
+      let waMsg = `*Mondal Book Store - Invoice* \n\n*Order ID:* ${orderId}\n*Date:* ${today}\n*Book:* ${bTitle}\n*Paid Amt:* INR ${finalAmt_1}\n*UTR ID:* ${trx}\n\n*Shipping Address:* \nName: ${cName}\nPhone: ${cPhone}\nAddress: ${cAddress}\n\nThank you for shopping with us!`;
+      document.getElementById('wa_share_btn').href = "https://api.whatsapp.com/send?phone=" + document.getElementById('code_1').value.replace('+','') + document.getElementById('phone_1').value + "&text=" + encodeURIComponent(waMsg);
+
       document.getElementById('st3_1').style.display = 'none'; 
       document.getElementById('success_box_1').style.display = 'block';
     } catch(e) { 
