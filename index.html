@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Checkout || Mondal Book Store</title>
   <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
   <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+  <script src="https://www.paypal.com/sdk/js?client-id=AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7&currency=USD"></script>
  
   <style>
     body { background-color: #fcfcfc; margin: 0; padding: 10px; }
@@ -72,8 +74,9 @@
     
     <div class="section-headline">💳 Choose Your Payment Method:</div>
     <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
-       <button id="pay_loader_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 OPTION A: Pay via Cashfree Gate</button>
-       <button class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 OPTION B: Pay via Instant UPI QR</button>
+       <button id="pay_loader_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
+       <button class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
+       <button class="btn-orange" style="background: #003087; padding:15px; font-weight:bold;" onclick="goToPayPalStep()">🌍 Option C: Pay via PayPal (International USD)</button>
     </div>
     
     <div style="display:flex; justify-content:space-between; margin-top:30px; border-top: 1px solid #eee; padding-top: 15px;">
@@ -86,11 +89,18 @@
     <img id="qr_1" style="width:200px; margin:auto; display:block;">
     <p class="amount-text" style="color:#2e7d32; margin-top:20px; font-size: 24px; font-weight: bold;">₹<span id="qv_1">0</span></p>
     <p style="font-size: 13px; color: #666; margin-bottom: 15px; text-align: left;">
-      ⚠️ পেমেন্ট করার পর আপনার ১২-ডিজিটের ট্রানজেকশন আইডি (UTR / Ref No) নিচে ইনপুট করে সাবমিট করুন।
+      ⚠️ Please complete the payment on the QR code above and input your 12-digit UPI Transaction ID (UTR / Ref No) below to confirm your order.
     </p>
     <input type="text" id="trx_1" placeholder="Enter 12-digit UPI Transaction ID / UTR *">
     <button id="final_btn_1" class="btn-blue" style="margin-top:15px; background: #2e7d32;" onclick="submitManualQRFinal()">CONFIRM MANUAL ORDER</button>
-    <p onclick="backToShippingFromQR()" class="back-link" style="margin-top:20px; text-align:center;">← Change Payment Option</p>
+    <p onclick="backToShippingFromGate()" class="back-link" style="margin-top:20px; text-align:center;">← Change Payment Option</p>
+  </div>
+
+  <div id="st3_paypal" class="step" style="background:#fff; border:1px solid #003087; padding:35px; border-radius:20px;">
+    <h3 style="font-size:24px; color:#003087; font-weight:400; margin-bottom: 10px;">PayPal Global Secure Gate</h3>
+    <p style="font-size:15px; color:#555; margin-bottom:20px;">Converted Amount: <span style="font-weight:bold; color:#003087;">$<span id="paypal_usd_amt">0.00</span> USD</span></p>
+    <div id="paypal-button-container"></div>
+    <p onclick="backToShippingFromGate()" class="back-link" style="margin-top:20px; text-align:center;">← Change Payment Option</p>
   </div>
 
   <div id="success_box_1" class="step" style="padding:20px 10px;">
@@ -99,9 +109,9 @@
        <hr style="border-top: 1px dashed #ccc; margin: 15px 0;">
        <p><b>Order ID / Payment ID:</b> <span id="inv_id">-</span></p>
        <p><b>Date:</b> <span id="inv_date">-</span></p>
-       <p><b>UTR / Reference No:</b> <span id="inv_txid" style="color:green; font-weight:bold;">-</span></p>
+       <p><b>UTR / Reference ID:</b> <span id="inv_txid" style="color:green; font-weight:bold;">-</span></p>
        <p><b>Book Details:</b> <span id="inv_book">-</span></p>
-       <p><b>Total Paid:</b> <span style="color:#2e7d32; font-weight:bold;">₹<span id="inv_total">0</span></span></p>
+       <p><b>Total Paid:</b> <span style="color:#2e7d32; font-weight:bold;"><span id="inv_total">0</span></span></p>
        <hr style="border-top: 1px solid #eee;">
        <p><b>Shipping Name:</b> <span id="inv_name">-</span></p>
        <p><b>Mobile:</b> <span id="inv_phone">-</span></p>
@@ -110,7 +120,7 @@
      </div>
      
      <div style="display:flex; flex-direction:column; gap:12px; max-width:300px; margin:auto;">
-       <button class="btn-blue" onclick="window.print()" style="background:#7f8c8d;">🖨️ Download / Print Receipt</button>
+       <button class="btn-blue" onclick="window.print()" style="background:#7f8c8d;">🖨️ Download / Print PDF</button>
        <a id="wa_share_btn" target="_blank" class="btn-green" style="background:#25D366; font-weight:bold;">💬 Receive Copy on WhatsApp</a>
        <a href="https://www.mondalbooks.com/" class="btn-blue" style="background:#1a73e8; font-weight:bold;">← Continue Shopping</a>
      </div>
@@ -119,7 +129,6 @@
 
 <script type="text/javascript">
   var orderType_1 = ""; var finalAmt_1 = 0; 
-  // ⚡ আপনার লেটেস্ট কপি করা সচল Google Web App লিঙ্ক এখানে বসালাম
   var ACTIVE_API = "https://script.google.com/macros/s/AKfycbzS78vS2ptiA7B6_P_vjDXzqh597athdnwE7C9OAMBhFqrBRtUM71kR14PHfJ0bzLa1/exec";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
   
@@ -135,8 +144,7 @@
     try {
       const params = getLiveMondalURLParams();
       if (params.has('cf_id')) {
-        let orderId = params.get('cf_id');
-        executeSheetSaveAfterPayment(orderId);
+        executeSheetSaveAfterPayment(params.get('cf_id'), "Cashfree Auto Paid", "INR " + finalAmt_1);
         return;
       }
       if (params.has('sku') || params.has('title')) {
@@ -170,135 +178,136 @@
   function updateDial_1() { let c = document.getElementById('c_select_1').value; document.getElementById('code_1').value = dialCodes[c] || "+"; }
   function startOrder_1() { document.getElementById('st1_1').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
   function backToS1_1() { document.getElementById('st2_1').style.display = 'none'; document.getElementById('st1_1').style.display = 'block'; }
-  function backToShippingFromQR() { document.getElementById('st3_manual_qr').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
+  function backToShippingFromGate() { document.getElementById('st3_manual_qr').style.display = 'none'; document.getElementById('st3_paypal').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
 
-  // 💳 পেমেন্ট অপশন A: ক্যাশফ্রি ইঞ্জিন
+  function validateShippingForm() {
+    let fields = ['name_1', 'phone_1', 'email_1', 'addr_1', 'pin_1'];
+    for(let f of fields) { if(!document.getElementById(f).value.trim()) return false; }
+    return true;
+  }
+
+  function saveFormToLocalStorage() {
+    localStorage.setItem('m_name', document.getElementById('name_1').value);
+    localStorage.setItem('m_phone', document.getElementById('code_1').value + " " + document.getElementById('phone_1').value);
+    localStorage.setItem('m_addr', document.getElementById('addr_1').value + (document.getElementById('loc_1').value ? " [Nearest: "+document.getElementById('loc_1').value+"]" : ""));
+    localStorage.setItem('m_pin', document.getElementById('pin_1').value);
+    localStorage.setItem('m_state', document.getElementById('c_select_1').value);
+    localStorage.setItem('m_email', document.getElementById('email_1').value);
+  }
+
+  // 💳 Option A: Cashfree
   async function payViaCashfreeEngine() {
-    let name = document.getElementById('name_1').value.trim();
-    let phone = document.getElementById('phone_1').value.trim();
-    let email = document.getElementById('email_1').value.trim();
-    let addr = document.getElementById('addr_1').value.trim();
-    let loc = document.getElementById('loc_1').value.trim();
-    let pin = document.getElementById('pin_1').value.trim();
-    
-    if(!name || !phone || !email || !addr || !pin) { alert("Please fill all required shipping fields!"); return; }
-    
+    if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('pay_loader_btn').innerText = "Opening Gateway...";
     document.getElementById('pay_loader_btn').disabled = true;
 
-    let sessionUrl = ACTIVE_API + "?action=createCashfreeOrder&amount=" + finalAmt_1 + "&cust_name=" + encodeURIComponent(name) + "&cust_phone=" + phone + "&cust_email=" + encodeURIComponent(email);
+    saveFormToLocalStorage();
+    let sessionUrl = ACTIVE_API + "?action=createCashfreeOrder&amount=" + finalAmt_1 + "&cust_name=" + encodeURIComponent(document.getElementById('name_1').value) + "&cust_phone=" + document.getElementById('phone_1').value + "&cust_email=" + encodeURIComponent(document.getElementById('email_1').value);
     try {
-      localStorage.setItem('mondal_cust_name', name);
-      localStorage.setItem('mondal_cust_phone', document.getElementById('code_1').value + " " + phone);
-      localStorage.setItem('mondal_cust_addr', addr + (loc ? " [Nearest: "+loc+"]" : ""));
-      localStorage.setItem('mondal_cust_pin', pin);
-      localStorage.setItem('mondal_cust_state', document.getElementById('c_select_1').value);
-      localStorage.setItem('mondal_cust_email', email);
-
       let response = await fetch(sessionUrl);
       let orderData = await response.json();
       if(orderData.payment_session_id) {
         cashfree.checkout({ paymentSessionId: orderData.payment_session_id, redirectTarget: "_top" });
       } else {
-        alert("Cashfree Whitelist Pending! Please choose Option B (UPI QR) below for instant payment.");
-        document.getElementById('pay_loader_btn').innerText = "💳 OPTION A: Pay via Cashfree Gate";
+        alert("Gateway processing error. Please choose Option B or C.");
+        document.getElementById('pay_loader_btn').innerText = "💳 Option A: Pay via Cashfree Gateway (INR)";
         document.getElementById('pay_loader_btn').disabled = false;
       }
     } catch (err) {
-      alert("Gateway Error. Please use Option B (Instant UPI QR).");
-      document.getElementById('pay_loader_btn').innerText = "💳 OPTION A: Pay via Cashfree Gate";
+      alert("Gateway Error. Choose Option B or C.");
       document.getElementById('pay_loader_btn').disabled = false;
     }
   }
 
-  // 📱 পেমেন্ট অপশন B: ম্যানুয়াল QR কোড ট্রিগার
+  // 📱 Option B: UPI QR Code
   function goToManualQRStep() {
-    let name = document.getElementById('name_1').value.trim();
-    let phone = document.getElementById('phone_1').value.trim();
-    let email = document.getElementById('email_1').value.trim();
-    let addr = document.getElementById('addr_1').value.trim();
-    let pin = document.getElementById('pin_1').value.trim();
-    if(!name || !phone || !email || !addr || !pin) { alert("Please fill all required shipping fields!"); return; }
-    
+    if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
     document.getElementById('st3_manual_qr').style.display = 'block';
     document.getElementById('qr_1').src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent("upi://pay?pa=contactsmondal@oksbi&pn=MondalBooks&am=" + finalAmt_1 + "&tn=MB" + Math.floor(100000 + Math.random() * 900000));
     document.getElementById('qv_1').innerText = finalAmt_1;
   }
 
-  // ম্যানুয়াল QR সাবমিশন ইঞ্জিন
   async function submitManualQRFinal() {
-    let trx = document.getElementById('trx_1').value.trim(); if(!trx) return alert("Enter 12-digit UTR!");
-    document.getElementById('final_btn_1').innerText = "Processing Order...";
-    document.getElementById('final_btn_1').disabled = true;
-
-    let orderId = "MB" + Math.floor(100000 + Math.random() * 900000);
-    let today = new Date().toLocaleString();
-    let bTitle = document.getElementById('lbl_title').innerText;
-    let bSku = document.getElementById('lbl_sku').innerText;
-    let cAddress = document.getElementById('addr_1').value + (document.getElementById('loc_1').value ? " [Nearest: "+document.getElementById('loc_1').value+"]" : "");
-    let fullDisplayAddress = cAddress + ", PIN: " + document.getElementById('pin_1').value + " (" + document.getElementById('c_select_1').value + ")";
-
-    let p = new URLSearchParams();
-    p.append("action", "saveOrder"); p.append("order_date", today); p.append("sku", bSku); p.append("book_title", bTitle);
-    p.append("order_type", orderType_1 + " [Qty: " + document.getElementById('lbl_order_qty').innerText + "]"); p.append("trx_id", trx);
-    p.append("cust_name", document.getElementById('name_1').value); p.append("country_code", document.getElementById('code_1').value);
-    p.append("cust_phone", document.getElementById('phone_1').value); p.append("cust_email", document.getElementById('email_1').value);
-    p.append("cust_address", cAddress); p.append("cust_pin", document.getElementById('pin_1').value);
-    p.append("country", document.getElementById('c_select_1').value); p.append("final_amount", "INR " + finalAmt_1);
-
-    try {
-      await fetch(ACTIVE_API, { method: "POST", mode: "no-cors", body: p });
-      renderSuccessInvoice(orderId, today, trx, bTitle, bSku, finalAmt_1, document.getElementById('name_1').value, document.getElementById('code_1').value + " " + document.getElementById('phone_1').value, fullDisplayAddress, document.getElementById('email_1').value);
-    } catch(e) { alert("Network Error."); }
+    let trx = document.getElementById('trx_1').value.trim(); if(!trx) return alert("Enter UTR ID!");
+    document.getElementById('final_btn_1').innerText = "Processing..."; document.getElementById('final_btn_1').disabled = true;
+    saveFormToLocalStorage();
+    await executeSheetSaveAfterPayment(trx, "UPI Manual Paid", "₹" + finalAmt_1);
   }
 
-  // ক্যাশফ্রি পেমেন্ট সফল হয়ে অটো-রিটার্ন হলে ডেটা সেভ করার মেথড
-  async function executeSheetSaveAfterPayment(cfOrderId) {
-    document.getElementById('st1_1').style.display = 'none';
+  // 🌍 Option C: PayPal Engine
+  function goToPayPalStep() {
+    if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
+    document.getElementById('st3_paypal').style.display = 'block';
+    
+    // Automatic Currency Conversion (1 USD = 84 INR Configuration)
+    let dollarAmt = (finalAmt_1 / 84).toFixed(2);
+    document.getElementById('paypal_usd_amt').innerText = dollarAmt;
+    saveFormToLocalStorage();
+
+    document.getElementById('paypal-button-container').innerHTML = ''; 
+    paypal.Buttons({
+      createOrder: function(data, actions) {
+        return actions.order.create({
+          purchase_units: [{ amount: { value: dollarAmt } }]
+        });
+      },
+      onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+          executeSheetSaveAfterPayment(details.id, "PayPal Global Paid", "$" + dollarAmt + " USD");
+        });
+      },
+      onError: function(err) {
+        alert("PayPal Gateway Error or Transaction Cancelled.");
+      }
+    }).render('#paypal-button-container');
+  }
+
+  // ⚡ Final Sheet Sync Engine
+  async function executeSheetSaveAfterPayment(payId, payMethodText, amountDisplay) {
     let today = new Date().toLocaleString();
-    let bTitle = "Mondal Book Item"; let bSku = "CF_GATEWAY";
-    let cName = localStorage.getItem('mondal_cust_name') || "Customer";
-    let cPhone = localStorage.getItem('mondal_cust_phone') || "Verified";
-    let cAddress = localStorage.getItem('mondal_cust_addr') || "Address Pooled";
-    let cPin = localStorage.getItem('mondal_cust_pin') || "000000";
-    let cState = localStorage.getItem('mondal_cust_state') || "India";
-    let cEmail = localStorage.getItem('mondal_cust_email') || "";
+    let bTitle = document.getElementById('lbl_title').innerText || "Book Item";
+    let bSku = document.getElementById('lbl_sku').innerText || "SKU_PRO";
+    
+    let cName = localStorage.getItem('m_name') || document.getElementById('name_1').value;
+    let cPhone = localStorage.getItem('m_phone') || document.getElementById('phone_1').value;
+    let cAddress = localStorage.getItem('m_addr') || document.getElementById('addr_1').value;
+    let cPin = localStorage.getItem('m_pin') || document.getElementById('pin_1').value;
+    let cState = localStorage.getItem('m_state') || document.getElementById('c_select_1').value;
+    let cEmail = localStorage.getItem('m_email') || document.getElementById('email_1').value;
 
     let p = new URLSearchParams();
     p.append("action", "saveOrder"); p.append("order_date", today); p.append("sku", bSku); p.append("book_title", bTitle);
-    p.append("order_type", "Cashfree Auto Paid"); p.append("trx_id", cfOrderId); p.append("cust_name", cName);
+    p.append("order_type", payMethodText); p.append("trx_id", payId); p.append("cust_name", cName);
     p.append("cust_phone", cPhone); p.append("cust_email", cEmail); p.append("cust_address", cAddress);
-    p.append("cust_pin", cPin); p.append("country", cState); p.append("final_amount", "INR Paid");
-
+    p.append("cust_pin", cPin); p.append("country", cState); p.append("final_amount", amountDisplay);
+    
     try {
       await fetch(ACTIVE_API, { method: "POST", mode: "no-cors", body: p });
-      renderSuccessInvoice(cfOrderId, today, "Cashfree Verified", bTitle, bSku, "Paid", cName, cPhone, cAddress + ", PIN: " + cPin + " (" + cState + ")", cEmail);
+      
+      document.getElementById('st3_manual_qr').style.display = 'none';
+      document.getElementById('st3_paypal').style.display = 'none';
+      
+      document.getElementById('inv_id').innerText = "INV-" + Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('inv_date').innerText = today;
+      document.getElementById('inv_txid').innerText = payId;
+      document.getElementById('inv_book').innerText = bTitle + " [SKU: "+bSku+"]";
+      document.getElementById('inv_total').innerText = amountDisplay;
+      document.getElementById('inv_name').innerText = cName;
+      document.getElementById('inv_phone').innerText = cPhone;
+      document.getElementById('inv_address').innerText = cAddress + ", PIN: " + cPin + " (" + cState + ")";
+      
+      if(cEmail) document.getElementById('email_status_text').innerHTML = "✓ Official Invoice sent to: <span style='color:#2e7d32;'>" + cEmail + "</span>";
+      else document.getElementById('email_status_text').style.display = "none";
+
+      let waMsg = `*Mondal Book Store - Invoice* \n\n*Order ID:* ${payId}\n*Book:* ${bTitle}\n*Amount:* ${amountDisplay}\n*Status:* Confirmed`;
+      document.getElementById('wa_share_btn').href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(waMsg);
+
+      document.getElementById('success_box_1').style.display = 'block';
     } catch(e) {
-      renderSuccessInvoice(cfOrderId, today, "Cashfree Verified", bTitle, bSku, "Paid", cName, cPhone, cAddress, cEmail);
+      document.getElementById('success_box_1').style.display = 'block';
     }
-  }
-
-  // ইনভয়েস রেন্ডারিং কোর ফাংশন
-  function renderSuccessInvoice(id, date, txid, book, sku, total, name, phone, address, email) {
-    document.getElementById('st3_manual_qr').style.display = 'none';
-    document.getElementById('inv_id').innerText = id;
-    document.getElementById('inv_date').innerText = date;
-    document.getElementById('inv_txid').innerText = txid;
-    document.getElementById('inv_book').innerText = book + " [SKU: " + sku + "]";
-    document.getElementById('inv_total').innerText = total;
-    document.getElementById('inv_name').innerText = name;
-    document.getElementById('inv_phone').innerText = phone;
-    document.getElementById('inv_address').innerText = address;
-    
-    if(email) document.getElementById('email_status_text').innerHTML = "✓ Official Invoice sent to: <span style='color:#2e7d32;'>" + email + "</span>";
-    else document.getElementById('email_status_text').style.display = "none";
-
-    let waMsg = `*Mondal Book Store - Invoice* \n\n*Order ID:* ${id}\n*Book:* ${book}\n*Paid Amt:* INR ${total}\n*Status:* Confirmed\n\nThank you for shopping with us!`;
-    document.getElementById('wa_share_btn').href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(waMsg);
-    
-    document.getElementById('success_box_1').style.display = 'block';
   }
 </script>
 </body>
