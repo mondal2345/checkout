@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   
   <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
-  <script src="https://www.paypal.com/sdk/js?client-id=AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7&currency=USD"></script>
+  <div id="paypal_sdk_holder"></div>
  
   <style>
     body { background-color: #fcfcfc; margin: 0; padding: 10px; }
@@ -72,7 +72,7 @@
         <input type="text" id="pin_1" placeholder="Postal / PIN Code *">
     </div>
     
-    <div class="section-headline">💳 Choose Your Payment Method:</div>
+    <div class="section-headline">65533 Choose Your Payment Method:</div>
     <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
        <button id="pay_loader_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
        <button class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
@@ -129,6 +129,7 @@
 
     <p style="font-size:16px; color:#555; margin-bottom:20px;">Converted Payable Amount: <span style="font-weight:bold; color:#003087;"><span id="paypal_symbol">$</span><span id="paypal_converted_amt">0.00</span> <span id="paypal_txt_curr">USD</span></span></p>
     
+    <div id="paypal_status_msg" style="color: #e65100; font-weight: bold; font-size:14px; margin-bottom:15px; display:none;">🔄 Syncing secure network buttons...</div>
     <div id="paypal-button-container"></div>
     <p onclick="backToShippingFromGate()" class="back-link" style="margin-top:20px; text-align:center;">← Change Payment Option</p>
   </div>
@@ -160,6 +161,7 @@
 <script type="text/javascript">
   var orderType_1 = ""; var finalAmt_1 = 0; 
   var ACTIVE_API = "https://script.google.com/macros/s/AKfycbzS78vS2ptiA7B6_P_vjDXzqh597athdnwE7C9OAMBhFqrBRtUM71kR14PHfJ0bzLa1/exec";
+  var PAYPAL_CLIENT_ID = "AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
   
   const cashfree = Cashfree({ mode: "production" });
@@ -266,7 +268,7 @@
     await executeSheetSaveAfterPayment(trx, "UPI Manual Paid", "₹" + finalAmt_1);
   }
 
-  // 🌍 Option C: PayPal Multi-Currency Engine Launch
+  // 🌍 Option C: PayPal Multi-Currency Setup
   function goToPayPalStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
@@ -276,7 +278,7 @@
     updatePayPalCurrencyEngine();
   }
 
-  // 🔄 অফিশিয়াল রানটাইম রেন্ডার লজিক (যা ব্রাউজার কনফ্লিক্ট এবং .01 লক হওয়া একবারে দূর করবে)
+  // 🔄 অফিশিয়াল ডাইনামিক স্ক্রিপ্ট রিলোডার মেকানিজম (যা কারেন্সি ক্যাশ কনফ্লিক্ট এক ক্লিকে চিরতরে মিটিয়ে দেবে)
   function updatePayPalCurrencyEngine() {
     let selectEl = document.getElementById('paypal_currency_select');
     let selectedOption = selectEl.options[selectEl.selectedIndex];
@@ -286,38 +288,55 @@
     let rate = parseFloat(selectedOption.getAttribute('data-rate'));
     let isZeroDigit = selectedOption.getAttribute('data-zero') === "true";
     
-    // নিখুঁত রেট ডাইনামিক রূপান্তর লজিক
+    // নিখুঁত লাইভ কারেন্সি কনভার্সন রেট হিসাব
     let convertedAmt = (finalAmt_1 / rate);
     convertedAmt = isZeroDigit ? Math.round(convertedAmt).toString() : convertedAmt.toFixed(2);
     
-    // ইন্টারফেস টেক্সট রেন্ডার
+    // স্ক্রিন ইন্টারফেস টেক্সট রেন্ডার
     document.getElementById('paypal_symbol').innerText = symbol;
     document.getElementById('paypal_converted_amt').innerText = convertedAmt;
     document.getElementById('paypal_txt_curr').innerText = selectedCurr;
     
     saveFormToLocalStorage();
     
-    // কন্টেইনার সম্পূর্ণ ফ্ল্যাশ করে ব্রাউজার ক্যাশ ও জ্যাম পরিষ্কার করা হচ্ছে
+    // ১. কন্টেইনার ফ্লাশ এবং স্টেটাস অন করা
+    document.getElementById('paypal_status_msg').style.display = "block";
     document.getElementById('paypal-button-container').innerHTML = ''; 
+
+    // ২. ব্রাউজার মেমোরি থেকে পুরনো লক করা পেপ্যাল অবজেক্ট এবং স্ক্রিপ্ট রিমুভ করা
+    if(window.paypal) { delete window.paypal; }
+    let oldScript = document.getElementById('paypal_live_core_sdk');
+    if(oldScript) oldScript.remove();
+
+    // ৩. সম্পূর্ণ নতুন কারেন্সি কোড দিয়ে লাইভ স্ক্রিপ্ট ফাইল ইনজেক্ট করা হচ্ছে
+    let script = document.createElement('script');
+    script.id = 'paypal_live_core_sdk';
+    script.src = "https://www.paypal.com/sdk/js?client-id=" + PAYPAL_CLIENT_ID + "&currency=" + selectedCurr;
     
-    // পেপ্যাল রানটাইম উইন্ডোর ভেতরে সরাসরি ভেরিয়েবল পাস করা হচ্ছে
-    paypal.Buttons({
-      createOrder: function(data, actions) {
-        return actions.order.create({
-          purchase_units: [{
-            amount: {
-              currency_code: selectedCurr, // সিলেক্টেড কারেন্সি কোড লাইভ সার্ভারে পুশ হবে
-              value: convertedAmt          // কনভার্ট হওয়া নিখুঁত ডাইনামিক এমাউন্ট হিট করবে
-            }
-          }]
-        });
-      },
-      onApprove: function(data, actions) {
-        return actions.order.capture().then(function(details) {
-          executeSheetSaveAfterPayment(details.id, "PayPal " + selectedCurr + " Paid", symbol + convertedAmt + " " + selectedCurr);
-        });
-      }
-    }).render('#paypal-button-container');
+    // স্ক্রিপ্ট ফাইলটি সম্পূর্ণ রিলোড হওয়া মাত্রই বাটন ফায়ার করবে (১০০% পপ-আপ সচল উইন্ডো সহ)
+    script.onload = function() {
+        document.getElementById('paypal_status_msg').style.display = "none";
+        
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  currency_code: selectedCurr,
+                  value: convertedAmt
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              executeSheetSaveAfterPayment(details.id, "PayPal " + selectedCurr + " Paid", symbol + convertedAmt + " " + selectedCurr);
+            });
+          }
+        }).render('#paypal-button-container');
+    };
+    
+    document.getElementById('paypal_sdk_holder').appendChild(script);
   }
 
   // ⚡ Final Sheet Sync Engine
