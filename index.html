@@ -64,7 +64,7 @@
     </div>
     <input type="email" id="email_1" placeholder="Email Address *">
     <div id="extra_box_1">
-        <textarea id="addr_1" placeholder="Full Delivery Address *" style="height:90pxpartial;"></textarea>
+        <textarea id="addr_1" placeholder="Full Delivery Address *" style="height:90px; resize:none;"></textarea>
         <input type="text" id="pin_1" placeholder="Postal / PIN Code *">
     </div>
     <button class="btn-blue" style="margin-top: 15px;" onclick="goToStep3_1()">GENERATE PAYMENT QR</button>
@@ -112,7 +112,9 @@
 </div>
 
 <script type="text/javascript">
-  var apiData_1 = null; var orderType_1 = ""; var finalAmt_1 = 0; var ACTIVE_API = "";
+  var orderType_1 = ""; var finalAmt_1 = 0; 
+  // ⚡ আপনার নতুন জেনারেট হওয়া লাইভ গুগল শিট এপিআই লিঙ্ক এখানে ডাইরেক্ট লক করে দেওয়া হলো
+  var ACTIVE_API = "https://script.google.com/macros/s/AKfycbzS78vS2ptiA7B6_P_vjDXzqh597athdnwE7C9OAMBhFqrBRtUM71kR14PHfJ0bzLa1/exec";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
 
   function getLiveMondalURLParams() {
@@ -123,10 +125,6 @@
 
   async function loadAndPrefillEngine() {
     try {
-      if (!ACTIVE_API) {
-        let g = await fetch("https://gist.githubusercontent.com/mondal2345/244937bf868c35944d98849dc873ee88/raw/a92ed019c9c038ece4033d9bf6e3eeb8624a3a01/api_gateway.txt"); 
-        ACTIVE_API = (await g.text()).trim();
-      }
       const params = getLiveMondalURLParams();
       if (params.has('sku') || params.has('title')) {
         let price = parseFloat(params.get('price')) || 0;
@@ -152,7 +150,7 @@
           cs.value = "India"; updateDial_1();
         }
       }
-    } catch(e) {}
+    } catch(e) { console.log("Prefill Engine Error: ", e); }
   }
   window.addEventListener('DOMContentLoaded', loadAndPrefillEngine);
 
@@ -191,7 +189,7 @@
     try {
       await fetch(ACTIVE_API, { method: "POST", mode: "no-cors", body: p });
       
-      // ইনভয়েস ভিউ জেনারেশন
+      // ইনভয়েস শিট ভিউ লাইভ জেনারেশন
       document.getElementById('inv_id').innerText = orderId;
       document.getElementById('inv_date').innerText = today;
       document.getElementById('inv_txid').innerText = trx;
@@ -201,7 +199,7 @@
       document.getElementById('inv_phone').innerText = cPhone;
       document.getElementById('inv_address').innerText = cAddress;
 
-      // 💬 হোয়াটসঅ্যাপ নোটিফিকেশন এপিআই জেনারেশন
+      // 💬 কাস্টমারের নিজের নম্বরে সিকিউর হোয়াটসঅ্যাপ মেসেজ জেনারেশন (আপনার পার্সোনাল নাম্বার গোপন থাকবে)
       let waMsg = `*Mondal Book Store - Invoice* \n\n*Order ID:* ${orderId}\n*Date:* ${today}\n*Book:* ${bTitle}\n*Paid Amt:* INR ${finalAmt_1}\n*UTR ID:* ${trx}\n\n*Shipping Address:* \nName: ${cName}\nPhone: ${cPhone}\nAddress: ${cAddress}\n\nThank you for shopping with us!`;
       document.getElementById('wa_share_btn').href = "https://api.whatsapp.com/send?phone=" + document.getElementById('code_1').value.replace('+','') + document.getElementById('phone_1').value + "&text=" + encodeURIComponent(waMsg);
 
