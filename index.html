@@ -96,11 +96,16 @@
     <button id="final_btn_1" class="btn-blue" style="margin-top:15px; background: #2e7d32;" onclick="submitFinal_1()">CONFIRM ORDER</button>
   </div>
 
-  <div id="success_box_1" class="step" style="padding:50px 20px; border:1px solid #2e7d32; border-radius:20px;">
-     <h2 style="color:#2e7d32; font-size:30px;">✓ Order Placed Successfully!</h2>
-     <p style="font-size:15px; color:#555;">Your order has been recorded in our system.</p>
+  <div id="success_box_1" class="step" style="padding:50px 20px; border:1px solid #2e7d32; border-radius:20px; background: #fafdfa;">
+     <h2 style="color:#2e7d32; font-size:30px; margin-bottom: 10px;">✓ Order Placed Successfully!</h2>
+     <p style="font-size:16px; color:#555; margin-bottom: 30px;">Your order has been recorded in our system.</p>
+     
+     <a href="https://www.mondalbooks.com/" style="text-decoration: none;">
+        <button class="btn-green" style="width:250px; margin:auto; display:block; background: #2e7d32; font-weight: bold; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(46,125,50,0.2);">
+           ← BACK TO BOOK STORE
+        </button>
+     </a>
   </div>
-</div>
 
 <script type="text/javascript">
   var apiData_1 = null; var orderType_1 = ""; var finalAmt_1 = 0; var ACTIVE_API = "";
