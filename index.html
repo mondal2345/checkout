@@ -65,6 +65,7 @@
     <input type="email" id="email_1" placeholder="Email Address *">
     <div id="extra_box_1">
         <textarea id="addr_1" placeholder="Full Delivery Address *" style="height:90px; resize:none;"></textarea>
+        <input type="text" id="loc_1" placeholder="Nearest Location / Landmark / Station *">
         <input type="text" id="pin_1" placeholder="Postal / PIN Code *">
     </div>
     <button class="btn-blue" style="margin-top: 15px;" onclick="goToStep3_1()">GENERATE PAYMENT QR</button>
@@ -100,7 +101,7 @@
        <p><b>Shipping Name:</b> <span id="inv_name">-</span></p>
        <p><b>Mobile:</b> <span id="inv_phone">-</span></p>
        <p><b>Address:</b> <span id="inv_address">-</span></p>
-       <p style="text-align: center; color: green; font-size: 11px; margin-top: 15px;">✓ A confirmation copy has been sent to your email!</p>
+       <p id="email_status_text" style="text-align: center; color: #1a73e8; font-weight: bold; font-size: 13px; margin-top: 15px; background: #e8f0fe; padding: 8px; border-radius: 5px;">📩 Sending Digital Invoice to Email...</p>
      </div>
      
      <div style="display:flex; flex-direction:column; gap:12px; max-width:300px; margin:auto;">
@@ -113,7 +114,7 @@
 
 <script type="text/javascript">
   var orderType_1 = ""; var finalAmt_1 = 0; 
-  // ⚡ আপনার নতুন জেনারেট হওয়া লাইভ গুগল শিট এপিআই লিঙ্ক এখানে ডাইরেক্ট লক করে দেওয়া হলো
+  // ⚡ আপনার লেটেস্ট কপি করা সচল Google Web App লিঙ্ক এখানে বসালাম
   var ACTIVE_API = "https://script.google.com/macros/s/AKfycbzS78vS2ptiA7B6_P_vjDXzqh597athdnwE7C9OAMBhFqrBRtUM71kR14PHfJ0bzLa1/exec";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
 
@@ -150,14 +151,14 @@
           cs.value = "India"; updateDial_1();
         }
       }
-    } catch(e) { console.log("Prefill Engine Error: ", e); }
+    } catch(e) { console.log(e); }
   }
   window.addEventListener('DOMContentLoaded', loadAndPrefillEngine);
 
   function updateDial_1() { let c = document.getElementById('c_select_1').value; document.getElementById('code_1').value = dialCodes[c] || "+"; }
   function startOrder_1() { document.getElementById('st1_1').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
   function backToS1_1() { document.getElementById('st2_1').style.display = 'none'; document.getElementById('st1_1').style.display = 'block'; }
-  function clearForm_1() { ['name_','phone_','email_','addr_','pin_'].forEach(id => { if(document.getElementById(id+'1')) document.getElementById(id+'1').value = ""; }); }
+  function clearForm_1() { ['name_','phone_','email_','addr_','loc_','pin_'].forEach(id => { if(document.getElementById(id+'1')) document.getElementById(id+'1').value = ""; }); }
 
   function goToStep3_1() {
     if(!document.getElementById('name_1').value || !document.getElementById('phone_1').value || !document.getElementById('email_1').value || !document.getElementById('addr_1').value || !document.getElementById('pin_1').value) { alert("Please fill all required fields!"); return; }
@@ -167,7 +168,7 @@
   }
 
   async function submitFinal_1() {
-    let trx = document.getElementById('trx_1').value.trim(); if(!trx) return alert("Enter 12-digit UPI UTR ID!");
+    let trx = document.getElementById('trx_1').value.trim(); if(!trx) return alert("Enter UTR ID!");
     document.getElementById('final_btn_1').innerText = "Processing Order...";
     document.getElementById('final_btn_1').disabled = true;
 
@@ -175,21 +176,34 @@
     let today = new Date().toLocaleString();
     let bTitle = document.getElementById('lbl_title').innerText;
     let bSku = document.getElementById('lbl_sku').innerText;
+    
     let cName = document.getElementById('name_1').value;
     let cPhone = document.getElementById('code_1').value + " " + document.getElementById('phone_1').value;
-    let cAddress = document.getElementById('addr_1').value + ", PIN: " + document.getElementById('pin_1').value + " (" + document.getElementById('c_select_1').value + ")";
+    let rawAddress = document.getElementById('addr_1').value;
+    let nearestLoc = document.getElementById('loc_1').value ? " [Nearest: " + document.getElementById('loc_1').value + "]" : "";
+    
+    let fullAddressToSave = rawAddress + nearestLoc;
+    let fullDisplayAddress = fullAddressToSave + ", PIN: " + document.getElementById('pin_1').value + " (" + document.getElementById('c_select_1').value + ")";
 
     let p = new URLSearchParams();
-    p.append("action", "saveOrder"); p.append("order_date", today); p.append("book_title", bTitle + " (" + bSku + ")");
-    p.append("cust_name", cName); p.append("country_code", document.getElementById('code_1').value); p.append("cust_phone", document.getElementById('phone_1').value);
-    p.append("cust_email", document.getElementById('email_1').value); p.append("cust_address", document.getElementById('addr_1').value); p.append("cust_pin", document.getElementById('pin_1').value);
-    p.append("trx_id", trx); p.append("order_type", orderType_1 + " [Qty: " + document.getElementById('lbl_order_qty').innerText + "]");
-    p.append("country", document.getElementById('c_select_1').value); p.append("final_amount", "INR " + finalAmt_1);
+    p.append("action", "saveOrder");
+    p.append("order_date", today);
+    p.append("sku", bSku);
+    p.append("book_title", bTitle);
+    p.append("order_type", orderType_1 + " [Qty: " + document.getElementById('lbl_order_qty').innerText + "]");
+    p.append("trx_id", trx);
+    p.append("cust_name", cName);
+    p.append("country_code", document.getElementById('code_1').value);
+    p.append("cust_phone", document.getElementById('phone_1').value);
+    p.append("cust_email", document.getElementById('email_1').value);
+    p.append("cust_address", fullAddressToSave);
+    p.append("cust_pin", document.getElementById('pin_1').value);
+    p.append("country", document.getElementById('c_select_1').value);
+    p.append("final_amount", "INR " + finalAmt_1);
     
     try {
       await fetch(ACTIVE_API, { method: "POST", mode: "no-cors", body: p });
       
-      // ইনভয়েস শিট ভিউ লাইভ জেনারেশন
       document.getElementById('inv_id').innerText = orderId;
       document.getElementById('inv_date').innerText = today;
       document.getElementById('inv_txid').innerText = trx;
@@ -197,16 +211,17 @@
       document.getElementById('inv_total').innerText = finalAmt_1;
       document.getElementById('inv_name').innerText = cName;
       document.getElementById('inv_phone').innerText = cPhone;
-      document.getElementById('inv_address').innerText = cAddress;
+      document.getElementById('inv_address').innerText = fullDisplayAddress;
 
-      // 💬 কাস্টমারের নিজের নম্বরে সিকিউর হোয়াটসঅ্যাপ মেসেজ জেনারেশন (আপনার পার্সোনাল নাম্বার গোপন থাকবে)
-      let waMsg = `*Mondal Book Store - Invoice* \n\n*Order ID:* ${orderId}\n*Date:* ${today}\n*Book:* ${bTitle}\n*Paid Amt:* INR ${finalAmt_1}\n*UTR ID:* ${trx}\n\n*Shipping Address:* \nName: ${cName}\nPhone: ${cPhone}\nAddress: ${cAddress}\n\nThank you for shopping with us!`;
+      document.getElementById('email_status_text').innerHTML = "✓ Invoice successfully sent to: <span style='color:#2e7d32;'>" + document.getElementById('email_1').value + "</span>";
+
+      let waMsg = `*Mondal Book Store - Invoice* \n\n*Order ID:* ${orderId}\n*Date:* ${today}\n*Book:* ${bTitle}\n*Paid Amt:* INR ${finalAmt_1}\n*UTR ID:* ${trx}\n\n*Shipping Address:* \nName: ${cName}\nPhone: ${cPhone}\nAddress: ${fullDisplayAddress}\n\nThank you for shopping with us!`;
       document.getElementById('wa_share_btn').href = "https://api.whatsapp.com/send?phone=" + document.getElementById('code_1').value.replace('+','') + document.getElementById('phone_1').value + "&text=" + encodeURIComponent(waMsg);
 
       document.getElementById('st3_1').style.display = 'none'; 
       document.getElementById('success_box_1').style.display = 'block';
     } catch(e) { 
-      alert("Error sending order data."); 
+      alert("Network Error. Please try again."); 
       document.getElementById('final_btn_1').innerText = "CONFIRM ORDER";
       document.getElementById('final_btn_1').disabled = false;
     }
