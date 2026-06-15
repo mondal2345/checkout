@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   
   <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
-  <div id="paypal_sdk_container"></div>
+  <script src="https://www.paypal.com/sdk/js?client-id=AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7"></script>
  
   <style>
     body { background-color: #fcfcfc; margin: 0; padding: 10px; }
@@ -129,7 +129,6 @@
 
     <p style="font-size:16px; color:#555; margin-bottom:20px;">Converted Payable Amount: <span style="font-weight:bold; color:#003087;"><span id="paypal_symbol">$</span><span id="paypal_converted_amt">0.00</span> <span id="paypal_txt_curr">USD</span></span></p>
     
-    <div id="paypal_loading_msg" style="color: #e65100; font-weight: bold; margin-bottom: 10px; display: none;">Loading secure buttons...</div>
     <div id="paypal-button-container"></div>
     <p onclick="backToShippingFromGate()" class="back-link" style="margin-top:20px; text-align:center;">← Change Payment Option</p>
   </div>
@@ -159,9 +158,8 @@
 </div>
 
 <script type="text/javascript">
-  var orderType_1 = ""; var finalAmt_1 = 0; var paypalButtonsInstance = null;
+  var orderType_1 = ""; var finalAmt_1 = 0; 
   var ACTIVE_API = "https://script.google.com/macros/s/AKfycbzS78vS2ptiA7B6_P_vjDXzqh597athdnwE7C9OAMBhFqrBRtUM71kR14PHfJ0bzLa1/exec";
-  var PAYPAL_CLIENT_ID = "AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
   
   const cashfree = Cashfree({ mode: "production" });
@@ -268,7 +266,7 @@
     await executeSheetSaveAfterPayment(trx, "UPI Manual Paid", "₹" + finalAmt_1);
   }
 
-  // 🌍 Option C: PayPal Multi-Currency Engine
+  // 🌍 Option C: PayPal Multi-Currency Setup (No conflict architecture)
   function goToPayPalStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('st2_1').style.display = 'none';
@@ -278,7 +276,7 @@
     updatePayPalCurrencyEngine();
   }
 
-  // 🔄 Dynamic Multi-Currency Loader for PayPal
+  // 🔄 Clean Runtime Currency Converter & Secure Payment Smart Button Synchronizer
   function updatePayPalCurrencyEngine() {
     let selectEl = document.getElementById('paypal_currency_select');
     let selectedOption = selectEl.options[selectEl.selectedIndex];
@@ -288,54 +286,41 @@
     let rate = parseFloat(selectedOption.getAttribute('data-rate'));
     let isZeroDigit = selectedOption.getAttribute('data-zero') === "true";
     
-    // Live calculated price matching
+    // Live Conversion calculation logic
     let convertedAmt = (finalAmt_1 / rate);
     convertedAmt = isZeroDigit ? Math.round(convertedAmt).toString() : convertedAmt.toFixed(2);
     
+    // UI Label Interface Updates
     document.getElementById('paypal_symbol').innerText = symbol;
     document.getElementById('paypal_converted_amt').innerText = convertedAmt;
     document.getElementById('paypal_txt_curr').innerText = selectedCurr;
     
     saveFormToLocalStorage();
-    document.getElementById('paypal_loading_msg').style.display = "block";
+    
+    // Safe Dynamic Button Re-Initialization mapping directly inside the standard runtime thread
     document.getElementById('paypal-button-container').innerHTML = ''; 
-
-    // Injecting dynamic configuration into the PayPal environment
-    if(window.paypal && paypalButtonsInstance) {
-       try { paypalButtonsInstance.close(); } catch(e){}
-    }
-
-    // Creating dynamic SDK script element to reload currency configuration instantly
-    let oldScript = document.getElementById('paypal_dynamic_sdk');
-    if(oldScript) oldScript.remove();
-
-    let script = document.createElement('script');
-    script.id = 'paypal_dynamic_sdk';
-    script.src = "https://www.paypal.com/sdk/js?client-id=" + PAYPAL_CLIENT_ID + "&currency=" + selectedCurr;
-    script.onload = function() {
-        document.getElementById('paypal_loading_msg').style.display = "none";
-        paypal.Buttons({
-          createOrder: function(data, actions) {
-            return actions.order.create({
-              purchase_units: [{
-                amount: {
-                  currency_code: selectedCurr,
-                  value: convertedAmt
-                }
-              }]
-            });
-          },
-          onApprove: function(data, actions) {
-            return actions.order.capture().then(function(details) {
-              executeSheetSaveAfterPayment(details.id, "PayPal " + selectedCurr + " Paid", symbol + convertedAmt + " " + selectedCurr);
-            });
-          },
-          onError: function(err) {
-            alert("PayPal Currency Session Conflict. Please refresh and retry.");
-          }
-        }).render('#paypal-button-container');
-    };
-    document.getElementById('paypal_sdk_container').appendChild(script);
+    
+    paypal.Buttons({
+      // Core configuration passing variables safely into PayPal server frames
+      createOrder: function(data, actions) {
+        return actions.order.create({
+          purchase_units: [{
+            amount: {
+              currency_code: selectedCurr, 
+              value: convertedAmt
+            }
+          }]
+        });
+      },
+      onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+          executeSheetSaveAfterPayment(details.id, "PayPal " + selectedCurr + " Paid", symbol + convertedAmt + " " + selectedCurr);
+        });
+      },
+      onError: function(err) {
+        console.log("PayPal Interface Error:", err);
+      }
+    }).render('#paypal-button-container');
   }
 
   // ⚡ Final Sheet Sync Engine
