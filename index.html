@@ -163,7 +163,8 @@
 
 <script type="text/javascript">
   var orderType_1 = ""; var finalAmt_1 = 0; var foreignBaseAmt = 0; 
-  var ACTIVE_API = "https://script.google.com/macros/s/AKfycbzS78vS2ptiA7B6_P_vjDXzqh597athdnwE7C9OAMBhFqrBRtUM71kR14PHfJ0bzLa1/exec";
+  // 🔽 গুগল স্ক্রিপ্ট বদলে আপনার নতুন লাইভ Render সার্ভার লিংক যুক্ত করা হয়েছে ভাই
+  var BASE_SERVER_URL = "https://mondal-bookstore-backend.onrender.com";
   var PAYPAL_CLIENT_ID = "AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
   
@@ -186,7 +187,6 @@
         let price = parseFloat(params.get('price')) || 0;
         let qty = parseInt(params.get('orderqty')) || 1;
         
-        // ⚡ ১. পিওর ক্যারেক্টার ফিল্টারিং (ফাঁকা টেক্সট স্ক্র্যাপ করার লজিক যা ভুল পেপ্যাল এড়াবে)
         let rawFPrice = params.get('f_price');
         let fPriceParam = 0;
         if (rawFPrice && rawFPrice.trim() !== "" && rawFPrice !== "null" && rawFPrice !== "undefined") {
@@ -196,7 +196,6 @@
         finalAmt_1 = price * qty;
         orderType_1 = params.get('type') || 'Retail';
         
-        // যদি শিটের FOREIGN_PRICE ঘরটি রিয়েল ভ্যালু ধারণ করে, তবেই পেপ্যাল বোতাম স্ক্রিনে আসবে
         if(fPriceParam > 0) {
            foreignBaseAmt = fPriceParam * qty;
            document.getElementById('paypal_global_btn').style.display = "block";
@@ -252,15 +251,28 @@
     localStorage.setItem('m_email', document.getElementById('email_1').value);
   }
 
-  // 💳 Option A: Cashfree
+  // 💳 Option A: Pay via Cashfree (নতুন সিকিউর JSON আর্কিটেকচার)
   async function payViaCashfreeEngine() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('pay_loader_btn').innerText = "Opening Gateway...";
     document.getElementById('pay_loader_btn').disabled = true;
     saveFormToLocalStorage();
-    let sessionUrl = ACTIVE_API + "?action=createCashfreeOrder&amount=" + finalAmt_1 + "&cust_name=" + encodeURIComponent(document.getElementById('name_1').value) + "&cust_phone=" + document.getElementById('phone_1').value + "&cust_email=" + encodeURIComponent(document.getElementById('email_1').value);
+    
+    // রেন্ডার এপিআই এর সাথে ম্যাপিং
+    let sessionUrl = BASE_SERVER_URL + "/api/create-cashfree-order";
+    let payload = {
+      amount: finalAmt_1,
+      cust_name: document.getElementById('name_1').value,
+      cust_phone: document.getElementById('phone_1').value,
+      cust_email: document.getElementById('email_1').value
+    };
+
     try {
-      let response = await fetch(sessionUrl);
+      let response = await fetch(sessionUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
       let orderData = await response.json();
       if(orderData.payment_session_id) {
         cashfree.checkout({ paymentSessionId: orderData.payment_session_id, redirectTarget: "_top" });
@@ -272,6 +284,7 @@
     } catch (err) {
       alert("Gateway Error.");
       document.getElementById('pay_loader_btn').disabled = false;
+      document.getElementById('pay_loader_btn').innerText = "💳 Option A: Pay via Cashfree Gateway (INR)";
     }
   }
 
@@ -360,6 +373,7 @@
     document.getElementById('paypal_sdk_holder').appendChild(script);
   }
 
+  // 📦 ফাইনাল অর্ডার গুগল শিটে সেভ এবং ইনভয়েস ইমেল করার মেইন ক্লাউড ট্রিগার
   async function executeSheetSaveAfterPayment(payId, payMethodText, amountDisplay) {
     let today = new Date().toLocaleString();
     let bTitle = document.getElementById('lbl_title').innerText || "Book Item";
@@ -372,14 +386,32 @@
     let cState = localStorage.getItem('m_state') || document.getElementById('c_select_1').value;
     let cEmail = localStorage.getItem('m_email') || document.getElementById('email_1').value;
 
-    let p = new URLSearchParams();
-    p.append("action", "saveOrder"); p.append("order_date", today); p.append("sku", bSku); p.append("book_title", bTitle);
-    p.append("order_type", payMethodText); p.append("trx_id", payId); p.append("cust_name", cName);
-    p.append("cust_phone", cPhone); p.append("cust_email", cEmail); p.append("cust_address", cAddress);
-    p.append("cust_pin", cPin); p.append("country", cState); p.append("final_amount", amountDisplay);
+    // নতুন Node.js স্ট্রাকচার অনুযায়ী পে-লোড ম্যাপিং
+    let orderPayload = {
+      order_id: payId,
+      order_date: today,
+      sku: bSku,
+      book_title: bTitle,
+      order_type: payMethodText,
+      final_amount: amountDisplay,
+      trx_id: payId,
+      cust_name: cName,
+      cust_phone: cPhone,
+      cust_email: cEmail,
+      cust_address: cAddress,
+      cust_pin: cPin,
+      country: cState
+    };
     
     try {
-      await fetch(ACTIVE_API, { method: "POST", mode: "no-cors", body: p });
+      // রেন্ডার সার্ভারের /api/save-order এন্ডপয়েন্টে ডেটা হিট করানো হচ্ছে ভাই
+      let saveUrl = BASE_SERVER_URL + "/api/save-order";
+      await fetch(saveUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload)
+      });
+
       document.getElementById('st3_manual_qr').style.display = 'none';
       document.getElementById('st3_paypal').style.display = 'none';
       
