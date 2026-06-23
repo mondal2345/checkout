@@ -50,7 +50,8 @@
       <tr><td class="spec-label">Condition:</td><td id="lbl_condition">-</td></tr>
       <tr><td class="spec-label">Year:</td><td id="lbl_year">-</td></tr>
       <tr><td class="spec-label">Order Type:</td><td id="lbl_type" style="font-weight: bold;">-</td></tr>
-      <tr><td class="spec-label">Unit Price:</td><td style="font-weight: bold; color: #2e7d32;">₹<span id="lbl_base_price">0</span></td></tr>
+      <!-- 🎯 কারেন্সি সিম্বল ডায়নামিক করার জন্য id="lbl_currency_sign" দেওয়া হলো ভাই -->
+      <tr><td class="spec-label">Unit Price:</td><td style="font-weight: bold; color: #2e7d32;"><span id="lbl_currency_sign">₹</span><span id="lbl_base_price">0</span></td></tr>
       <tr><td class="spec-label">Selected Qty:</td><td id="lbl_order_qty" style="font-weight: bold;">1</td></tr>
     </table>
     <div class="payable-container" style="background: #f4f9f4; padding: 15px; border-radius: 8px;">
@@ -76,8 +77,9 @@
     
     <div class="section-headline">💳 Choose Your Payment Method:</div>
     <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
-       <button id="pay_loader_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
-       <button class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
+       <!-- 🛡️ আইডি লক করা লোকাল ইন্ডিয়ান বাটনসমূহ ভাই -->
+       <button id="cashfree_gate_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
+       <button id="manual_upi_btn" class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
        
        <button id="paypal_global_btn" class="btn-orange" style="background: #003087; padding:15px; font-weight:bold; display:none;" onclick="goToPayPalStep()">🌍 Option C: Pay via PayPal (International Multi-Currency)</button>
     </div>
@@ -104,30 +106,30 @@
     
     <label style="font-size:14px; font-weight:bold; color:#555; display:block; margin-bottom:5px; text-align:left;">Select Your Local Currency:</label>
     <select id="paypal_currency_select" onchange="updatePayPalCurrencyEngine()" style="margin-bottom:15px;">
-  <option value="USD" data-symbol="$" data-rate="1.00">USD - United States Dollar (Default)</option>
-  <option value="EUR" data-symbol="€" data-rate="0.92">EUR - Euro</option>
-  <option value="GBP" data-symbol="£" data-rate="0.78">GBP - Pound Sterling</option>
-  <option value="CAD" data-symbol="C$" data-rate="1.37">CAD - Canadian Dollar</option>
-  <option value="AUD" data-symbol="A$" data-rate="1.51">AUD - Australian Dollar</option>
-  <option value="JPY" data-symbol="¥" data-rate="158.50" data-zero="true">JPY - Japanese Yen</option>
-  <option value="SGD" data-symbol="S$" data-rate="1.35">SGD - Singapore Dollar</option>
-  <option value="HKD" data-symbol="HK$" data-rate="7.80">HKD - Hong Kong Dollar</option>
-  <option value="NZD" data-symbol="NZ$" data-rate="1.64">NZD - New Zealand Dollar</option>
-  <option value="CHF" data-symbol="CHF" data-rate="0.89">CHF - Swiss Franc</option>
-  <option value="THB" data-symbol="฿" data-rate="36.70">THB - Thai Baht</option>
-  <option value="PHP" data-symbol="₱" data-rate="58.80">PHP - Philippine Peso</option>
-  <option value="MYR" data-symbol="RM" data-rate="4.71">MYR - Malaysian Ringgit</option>
-  <option value="TWD" data-symbol="NT$" data-rate="32.40" data-zero="true">TWD - New Taiwan Dollar</option>
-  <option value="HUF" data-symbol="Ft" data-rate="368.50" data-zero="true">HUF - Hungarian Forint</option>
-  <option value="ILS" data-symbol="₪" data-rate="3.72">ILS - Israeli New Shekel</option>
-  <option value="MXN" data-symbol="Mex$" data-rate="18.40">MXN - Mexican Peso</option>
-  <option value="BRL" data-symbol="R$" data-rate="5.45">BRL - Brazilian Real</option>
-  <option value="PLN" data-symbol="zł" data-rate="4.04">PLN - Polish Złoty</option>
-  <option value="SEK" data-symbol="kr" data-rate="10.50">SEK - Swedish Krona</option>
-  <option value="NOK" data-symbol="kr" data-rate="10.60">NOK - Norwegian Krone</option>
-  <option value="DKK" data-symbol="kr" data-rate="6.90">DKK - Danish Krone</option>
-  <option value="CZK" data-symbol="Kč" data-rate="23.20">CZK - Czech Koruna</option>
-</select>
+      <option value="USD" data-symbol="$" data-rate="1.00">USD - United States Dollar (Default)</option>
+      <option value="EUR" data-symbol="€" data-rate="0.92">EUR - Euro</option>
+      <option value="GBP" data-symbol="£" data-rate="0.78">GBP - Pound Sterling</option>
+      <option value="CAD" data-symbol="C$" data-rate="1.37">CAD - Canadian Dollar</option>
+      <option value="AUD" data-symbol="A$" data-rate="1.51">AUD - Australian Dollar</option>
+      <option value="JPY" data-symbol="¥" data-rate="158.50" data-zero="true">JPY - Japanese Yen</option>
+      <option value="SGD" data-symbol="S$" data-rate="1.35">SGD - Singapore Dollar</option>
+      <option value="HKD" data-symbol="HK$" data-rate="7.80">HKD - Hong Kong Dollar</option>
+      <option value="NZD" data-symbol="NZ$" data-rate="1.64">NZD - New Zealand Dollar</option>
+      <option value="CHF" data-symbol="CHF" data-rate="0.89">CHF - Swiss Franc</option>
+      <option value="THB" data-symbol="฿" data-rate="36.70">THB - Thai Baht</option>
+      <option value="PHP" data-symbol="₱" data-rate="58.80">PHP - Philippine Peso</option>
+      <option value="MYR" data-symbol="RM" data-rate="4.71">MYR - Malaysian Ringgit</option>
+      <option value="TWD" data-symbol="NT$" data-rate="32.40" data-zero="true">TWD - New Taiwan Dollar</option>
+      <option value="HUF" data-symbol="Ft" data-rate="368.50" data-zero="true">HUF - Hungarian Forint</option>
+      <option value="ILS" data-symbol="₪" data-rate="3.72">ILS - Israeli New Shekel</option>
+      <option value="MXN" data-symbol="Mex$" data-rate="18.40">MXN - Mexican Peso</option>
+      <option value="BRL" data-symbol="R$" data-rate="5.45">BRL - Brazilian Real</option>
+      <option value="PLN" data-symbol="zł" data-rate="4.04">PLN - Polish Złoty</option>
+      <option value="SEK" data-symbol="kr" data-rate="10.50">SEK - Swedish Krona</option>
+      <option value="NOK" data-symbol="kr" data-rate="10.60">NOK - Norwegian Krone</option>
+      <option value="DKK" data-symbol="kr" data-rate="6.90">DKK - Danish Krone</option>
+      <option value="CZK" data-symbol="Kč" data-rate="23.20">CZK - Czech Koruna</option>
+    </select>
 
     <p style="font-size:16px; color:#555; margin-bottom:20px;">Converted Payable Amount: <span style="font-weight:bold; color:#003087;"><span id="paypal_symbol">$</span><span id="paypal_converted_amt">0.00</span> <span id="paypal_txt_curr">USD</span></span></p>
     
@@ -161,10 +163,10 @@
 </div>
 
 <script type="text/javascript">
-  var orderType_1 = "Retail"; var finalAmt_1 = 0; var foreignBaseAmtInr = 0; 
+  var orderType_1 = "Retail"; var finalAmt_1 = 0; var foreignBaseAmtInr = 0; var isInternationalMode = false;
   var BASE_SERVER_URL = "https://mondal-bookstore-backend.onrender.com";
   var PAYPAL_CLIENT_ID = "AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7";
-  // 🌍 বিশ্বের সব দেশের নাম এবং তাদের সঠিক কান্ট্রি ডায়াল কোড (STD Code) ভাই
+  
   var dialCodes = {
     "India": "+91", "Bangladesh": "+880", "USA": "+1", "UK": "+44", "Malaysia": "+60", 
     "Nepal": "+977", "Pakistan": "+92", "Kuwait": "+965", "Qatar": "+974", "UAE": "+971",
@@ -210,78 +212,10 @@
     return new URLSearchParams(window.location.search);
   }
 
-  async function loadAndPrefillEngine() {
-    try {
-      const params = getLiveMondalURLParams();
-      if (params.has('cf_id')) {
-        executeSheetSaveAfterPayment(params.get('cf_id'), "Cashfree Auto Paid", "INR " + finalAmt_1);
-        return;
-      }
-      if (params.has('sku') || params.has('title')) {
-        let price = parseFloat(params.get('price')) || 0;
-        let qty = parseInt(params.get('orderqty')) || parseInt(params.get('qty')) || 1;
-        
-        // 🎯 [মেগা ফরেন প্রাইস ইনজেকশন]: URL থেকে ফরেইন প্রাইস রিড করা হচ্ছে (যা ভারতীয় রুপি) ভাই
-        let rawFPrice = params.get('f_price') || params.get('foreign_price');
-        let fPriceParam = 0;
-        if (rawFPrice && rawFPrice.trim() !== "" && rawFPrice !== "null" && rawFPrice !== "undefined") {
-          fPriceParam = parseFloat(rawFPrice.replace(/[^0-9.]/g, '')) || 0;
-        }
-        
-        finalAmt_1 = price;
-        
-        let bTitle = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
-        let rawType = params.get('type') ? params.get('type').toString().trim() : "Retail";
-        
-        if (/business/i.test(rawType) || /wholesale/i.test(rawType) || bTitle.includes("(5 Copies)") || bTitle.includes("5 Copies")) {
-            orderType_1 = "Business";
-            let typeLabel = document.getElementById('lbl_type');
-            typeLabel.innerText = "Business Order (Wholesale) 💼";
-            typeLabel.style.color = "#1a73e8";
-        } else {
-            orderType_1 = "Retail";
-            let typeLabel = document.getElementById('lbl_type');
-            typeLabel.innerText = "Retail Order 🚀";
-            typeLabel.style.color = "#e65100";
-        }
-        
-        // 🔥 [পেপ্যাল ভিজিবিলিটি ফিল্টার]: ফরেন প্রাইস রুপি ভ্যালু ০ এর বেশি হলে বাটন শো করবে ভাই!
-        if(fPriceParam > 0) {
-           foreignBaseAmtInr = fPriceParam;
-           document.getElementById('paypal_global_btn').style.display = "block";
-        } else {
-           document.getElementById('paypal_global_btn').style.display = "none";
-        }
-
-        document.getElementById('lbl_title').innerText = bTitle;
-        document.getElementById('lbl_sku').innerText = params.get('sku') || '-';
-        document.getElementById('lbl_publisher').innerText = decodeURIComponent(params.get('publisher') || '-').replace(/\+/g, ' ');
-        document.getElementById('lbl_author').innerText = decodeURIComponent(params.get('author') || '-').replace(/\+/g, ' ');
-        document.getElementById('lbl_binding').innerText = decodeURIComponent(params.get('binding') || '-').replace(/\+/g, ' ');
-        document.getElementById('lbl_condition').innerText = decodeURIComponent(params.get('condition') || '-').replace(/\+/g, ' ');
-        document.getElementById('lbl_year').innerText = params.get('year') || '-';
-        
-        if (orderType_1 === "Business") {
-            document.getElementById('lbl_base_price').innerText = (price / 5).toFixed(0);
-            document.getElementById('lbl_order_qty').innerText = "5 (Batch)";
-        } else {
-            document.getElementById('lbl_base_price').innerText = price;
-            document.getElementById('lbl_order_qty').innerText = qty;
-        }
-        
-        document.getElementById('sum_price_1').innerText = "₹" + finalAmt_1;
-
-        let cs = document.getElementById('c_select_1');
-        if (cs && cs.innerHTML === '') {
-          Object.keys(dialCodes).forEach(c => { cs.innerHTML += '<option value="'+c+'">'+c+'</option>'; });
-          cs.value = "India"; updateDial_1();
-        }
-      }
-    } catch(e) {}
+  function updateDial_1() { 
+    let c = document.getElementById('c_select_1').value; 
+    document.getElementById('code_1').value = dialCodes[c] || "+"; 
   }
-  window.addEventListener('DOMContentLoaded', loadAndPrefillEngine);
-
-  function updateDial_1() { let c = document.getElementById('c_select_1').value; document.getElementById('code_1').value = dialCodes[c] || "+"; }
   function startOrder_1() { document.getElementById('st1_1').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
   function backToS1_1() { document.getElementById('st2_1').style.display = 'none'; document.getElementById('st1_1').style.display = 'block'; }
   function backToShippingFromGate() { document.getElementById('st3_manual_qr').style.display = 'none'; document.getElementById('st3_paypal').style.display = 'none'; document.getElementById('st2_1').style.display = 'block'; }
@@ -365,38 +299,30 @@
     updatePayPalCurrencyEngine();
   }
 
-  // 🌍 বিশ্ববাজারের লাইভ ওঠানামার সাথে ম্যাচ করা মেগা কারেন্সি কনভার্টার ইঞ্জিন ভাই
   async function updatePayPalCurrencyEngine() {
     let selectEl = document.getElementById('paypal_currency_select');
     let selectedOption = selectEl.options[selectEl.selectedIndex];
     
-    let selectedCurr = selectEl.value; // কাস্টমারের সিলেক্ট করা কারেন্সি কোড (যেমন: EUR, GBP, TWD)
+    let selectedCurr = selectEl.value; 
     let symbol = selectedOption.getAttribute('data-symbol');
-    let isZeroDigit = selectedOption.getAttribute('data-zero') === "true"; // দশমিক ছাড়া কারেন্সি সেফটি চেক
-    
-    // ব্যাকআপ ফলব্যাক রেট (যদি কোনো কারণে কাস্টমারের নেটওয়ার্ক স্লো থাকে ভাই)
+    let isZeroDigit = selectedOption.getAttribute('data-zero') === "true"; 
     let fallbackSubRate = parseFloat(selectedOption.getAttribute('data-rate')); 
 
     saveFormToLocalStorage();
     document.getElementById('paypal_status_msg').style.display = "block";
 
-    // ক) প্রথমে লাইভ রেট অনুযায়ী আপনার শিটের কলাম X (INR)-কে বেস ইউএস ডলারে (USD) কনভার্ট ভাই
-    let inrToUsdRate = 1 / 83.50; // ডিফল্ট সেফটি রেট
-    let usdToSelectedCurrRate = fallbackSubRate; // ড্রপডাউন কারেন্সির ডিফল্ট রেট
+    let inrToUsdRate = 1 / 83.50; 
+    let usdToSelectedCurrRate = fallbackSubRate; 
 
     try {
-      // 🚀 গ্লোবাল লাইভ কারেন্সি এপিআই কল (১ সেকেন্ডে বিশ্ববাজারের লাইভ ডাটা ডাউনলোড হবে ভাই)
       let response = await fetch("https://open.er-api.com/v6/latest/USD");
       if (response.ok) {
         let exchangeData = await response.json();
         if (exchangeData.rates) {
-          // ১. লাইভ INR টু USD রেট ক্যালকুলেশন ভাই
           let liveInrRate = exchangeData.rates.INR;
           if (liveInrRate) {
             inrToUsdRate = 1 / liveInrRate;
           }
-          
-          // ২. 🎯 [মেগা সলভ]: ড্রপডাউনের কারেন্সির একদম লাইভ কারেন্ট রেট তুলে আনা ভাই (Fixes Daily Fluctuations)
           if (exchangeData.rates[selectedCurr]) {
             usdToSelectedCurrRate = exchangeData.rates[selectedCurr];
             console.log("Live Market Rate Sync for " + selectedCurr + ": " + usdToSelectedCurrRate);
@@ -407,18 +333,15 @@
       console.log("Using static fallback rate due to internet refresh delay.");
     }
 
-    // খ) ফাইনাল ম্যাথমেটিক্যাল ক্যালকুলেশন ইঞ্জিন ভাই
-    let baseUsdAmt = foreignBaseAmtInr * inrToUsdRate; // রুপি থেকে ডলারে রূপান্তর
-    let finalConvertedAmt = baseUsdAmt * usdToSelectedCurrRate; // ডলার থেকে লাইভ আন্তর্জাতিক কারেন্সিতে কনভার্ট ভাই!
+    let baseUsdAmt = foreignBaseAmtInr * inrToUsdRate; 
+    let finalConvertedAmt = baseUsdAmt * usdToSelectedCurrRate; 
     
-    // 🛡️ গেটওয়ে এরর লক: জিরো-ডেসিমেলে খুচরা কেটে ফেলা হবে, বাকিগুলোতে দশমিকের পর ২ ঘর থাকবে ভাই
     finalConvertedAmt = isZeroDigit ? Math.round(finalConvertedAmt).toString() : finalConvertedAmt.toFixed(2);
     
     document.getElementById('paypal_symbol').innerText = symbol;
     document.getElementById('paypal_converted_amt').innerText = finalConvertedAmt;
     document.getElementById('paypal_txt_curr').innerText = selectedCurr;
     
-    // গ) পেপ্যাল এপিআই এবং সিকিউর বাটন রেন্ডার ইঞ্জিন ভাই
     let oldScript = document.getElementById('paypal_live_core_sdk');
     if(oldScript) oldScript.remove();
 
@@ -459,38 +382,29 @@
     };
     document.getElementById('paypal_sdk_holder').appendChild(script);
   }
-  
-  // 🎯 ইউআরএল প্যারামিটার রিড এবং ব্ল্যাঙ্ক-স্ক্রিন প্রোটেকশন মেগা ইঞ্জিন ভাই
+
   async function loadAndPrefillEngine() {
     try {
       const params = getLiveMondalURLParams();
-      
-      // যদি ক্যাশফ্রি রিটার্ন আইডি থাকে
       if (params.has('cf_id')) {
         executeSheetSaveAfterPayment(params.get('cf_id'), "Cashfree Auto Paid", "INR " + finalAmt_1);
         return;
       }
       
-      // মূল ডাটা লোডিং ব্লক ভাই
       if (params.has('sku') || params.has('title')) {
         let price = parseFloat(params.get('price')) || 0;
         let qty = parseInt(params.get('orderqty')) || parseInt(params.get('qty')) || 1;
         
-        // 🎯 [বুলেটপ্রুফ চেক]: f_price অথবা foreign_price যে নামেই আসুক, ক্যাচ করবে ভাই!
         let rawFPrice = params.get('f_price') || params.get('foreign_price') || params.get('foreignPrice') || "0";
         let fPriceParam = 0;
-        
         if (rawFPrice && rawFPrice.toString().trim() !== "" && rawFPrice !== "null" && rawFPrice !== "undefined") {
           fPriceParam = parseFloat(rawFPrice.toString().replace(/[^0-9.]/g, '')) || 0;
         }
         
-        finalAmt_1 = price; // মূল রুপি দাম লক
-        
-        // টাইটেল এবং বাকি তথ্য রিড
+        finalAmt_1 = price; 
         let bTitle = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
         let rawType = params.get('type') ? params.get('type').toString().trim() : "Retail";
         
-        // বিজনেস অর্ডার ডিটেকশন ফিক্স
         if (/business/i.test(rawType) || /wholesale/i.test(rawType) || bTitle.includes("(5 Copies)") || bTitle.includes("5 Copies")) {
             orderType_1 = "Business";
             let typeLabel = document.getElementById('lbl_type');
@@ -507,19 +421,46 @@
             }
         }
         
-        // 🌍 পেপ্যাল বাটন ভিজিবিলিটি ট্র্যাকার লক ভাই
-        if(fPriceParam > 0) {
+        // 🎯 [🌍 মেগা কন্ডিশনাল গেটওয়ে লক এবং কারেন্সি মোড ফিক্স ভাই]
+        if (fPriceParam > 0 || params.get('type') === "International") {
+           isInternationalMode = true;
            foreignBaseAmtInr = fPriceParam;
+           
+           // ১. প্রথম পেজের কারেন্সি সাইন এবং কন্টেন্ট পুরো ডলারে ($) রূপান্তর ভাই
+           let usdUnitPrice = (foreignBaseAmtInr / 83.50);
+           let usdTotalPayable = usdUnitPrice;
+           
+           if (orderType_1 === "Business") {
+             usdUnitPrice = (usdUnitPrice / 5);
+           }
+           
+           if(document.getElementById('lbl_currency_sign')) document.getElementById('lbl_currency_sign').innerText = "$";
+           if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = usdUnitPrice.toFixed(2);
+           if(document.getElementById('sum_price_1')) document.getElementById('sum_price_1').innerText = "$" + usdTotalPayable.toFixed(2) + " USD";
+           
+           // ②. শিপিং পেজে লোকাল ইন্ডিয়ান গেটওয়ে বাটন চিরতরে হাইড এবং শুধু পেপ্যাল শো ভাই!
+           if(document.getElementById('cashfree_gate_btn')) document.getElementById('cashfree_gate_btn').style.display = "none";
+           if(document.getElementById('manual_upi_btn')) document.getElementById('manual_upi_btn').style.display = "none";
            if(document.getElementById('paypal_global_btn')) {
              document.getElementById('paypal_global_btn').style.display = "block";
+             document.getElementById('paypal_global_btn').innerText = "🌍 Proceed via PayPal Global Secure (USD)";
            }
         } else {
-           if(document.getElementById('paypal_global_btn')) {
-             document.getElementById('paypal_global_btn').style.display = "none";
+           // লোকাল ইন্ডিয়ান মোড (INR) ভাই
+           isInternationalMode = false;
+           if(document.getElementById('lbl_currency_sign')) document.getElementById('lbl_currency_sign').innerText = "₹";
+           if(document.getElementById('cashfree_gate_btn')) document.getElementById('cashfree_gate_btn').style.display = "block";
+           if(document.getElementById('manual_upi_btn')) document.getElementById('manual_upi_btn').style.display = "block";
+           if(document.getElementById('paypal_global_btn')) document.getElementById('paypal_global_btn').style.display = "none";
+           
+           if (orderType_1 === "Business") {
+               if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = (price / 5).toFixed(0);
+           } else {
+               if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = price;
            }
+           if(document.getElementById('sum_price_1')) document.getElementById('sum_price_1').innerText = "₹" + finalAmt_1;
         }
 
-        // 📝 টেক্সট নোড সেফটি ইনজেকশন ভাই (যাতে কোনো এলিমেন্ট মিসিং হলেও স্ক্রিপ্ট বন্ধ না হয়)
         if(document.getElementById('lbl_title')) document.getElementById('lbl_title').innerText = bTitle;
         if(document.getElementById('lbl_sku')) document.getElementById('lbl_sku').innerText = params.get('sku') || '-';
         if(document.getElementById('lbl_publisher')) document.getElementById('lbl_publisher').innerText = decodeURIComponent(params.get('publisher') || '-').replace(/\+/g, ' ');
@@ -527,30 +468,81 @@
         if(document.getElementById('lbl_binding')) document.getElementById('lbl_binding').innerText = decodeURIComponent(params.get('binding') || '-').replace(/\+/g, ' ');
         if(document.getElementById('lbl_condition')) document.getElementById('lbl_condition').innerText = decodeURIComponent(params.get('condition') || '-').replace(/\+/g, ' ');
         if(document.getElementById('lbl_year')) document.getElementById('lbl_year').innerText = params.get('year') || '-';
-        
-        if (orderType_1 === "Business") {
-            if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = (price / 5).toFixed(0);
-            if(document.getElementById('lbl_order_qty')) document.getElementById('lbl_order_qty').innerText = "5 (Batch)";
-        } else {
-            if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = price;
-            if(document.getElementById('lbl_order_qty')) document.getElementById('lbl_order_qty').innerText = qty;
-        }
-        
-        if(document.getElementById('sum_price_1')) document.getElementById('sum_price_1').innerText = "₹" + finalAmt_1;
+        if(document.getElementById('lbl_order_qty')) document.getElementById('lbl_order_qty').innerText = (orderType_1 === "Business") ? "5 (Batch)" : qty;
 
-        // গ্লোবাল ডায়াল কোড ড্রপডাউন জেনারেটর
+        // গ্লোবাল ডায়াল কোড ড্রপডাউন জেনারেটর (ডিফল্ট USA সিলেক্ট থাকবে ইন্টারন্যাশনাল মোডে ভাই!)
         let cs = document.getElementById('c_select_1');
         if (cs && cs.innerHTML === '') {
           let sortedCountries = Object.keys(dialCodes).sort();
           sortedCountries.forEach(c => { 
             cs.innerHTML += '<option value="'+c+'">'+c+'</option>'; 
           });
-          cs.value = "India"; 
+          cs.value = isInternationalMode ? "USA" : "India"; 
           updateDial_1();
         }
       }
     } catch(e) {
       console.log("Pre-fill error blocked by safety engine: " + e.message);
+    }
+  }
+  window.addEventListener('DOMContentLoaded', loadAndPrefillEngine);
+
+  async function executeSheetSaveAfterPayment(payId, payMethodText, amountDisplay) {
+    let today = new Date().toLocaleString();
+    let bTitle = document.getElementById('lbl_title').innerText || "Book Item";
+    let bSku = document.getElementById('lbl_sku').innerText || "SKU_PRO";
+    
+    let cName = localStorage.getItem('m_name') || document.getElementById('name_1').value;
+    let cPhone = localStorage.getItem('m_phone') || document.getElementById('phone_1').value;
+    let cAddress = localStorage.getItem('m_addr') || document.getElementById('addr_1').value;
+    let cPin = localStorage.getItem('m_pin') || document.getElementById('pin_1').value;
+    let cState = localStorage.getItem('m_state') || document.getElementById('c_select_1').value;
+    let cEmail = localStorage.getItem('m_email') || document.getElementById('email_1').value;
+
+    let orderPayload = {
+      order_id: payId,
+      order_date: today,
+      sku: bSku,
+      book_title: bTitle,
+      order_type: orderType_1 + " (" + payMethodText + ")",
+      final_amount: amountDisplay,
+      trx_id: payId,
+      cust_name: cName,
+      cust_phone: cPhone,
+      cust_email: cEmail,
+      cust_address: cAddress,
+      cust_pin: cPin,
+      country: cState
+    };
+    
+    try {
+      let saveUrl = BASE_SERVER_URL + "/api/save-order";
+      await fetch(saveUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload)
+      });
+
+      document.getElementById('st3_manual_qr').style.display = 'none';
+      document.getElementById('st3_paypal').style.display = 'none';
+      
+      document.getElementById('inv_id').innerText = "INV-" + Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('inv_date').innerText = today;
+      document.getElementById('inv_txid').innerText = payId;
+      document.getElementById('inv_book').innerText = bTitle + " [SKU: "+bSku+"]";
+      document.getElementById('inv_total').innerText = amountDisplay;
+      document.getElementById('inv_name').innerText = cName;
+      document.getElementById('inv_phone').innerText = cPhone;
+      document.getElementById('inv_address').innerText = cAddress + ", PIN: " + cPin + " (" + cState + ")";
+      
+      if(cEmail) document.getElementById('email_status_text').innerHTML = "✓ Official Invoice sent to: <span style='color:#2e7d32;'>" + cEmail + "</span>";
+      else document.getElementById('email_status_text').style.display = "none";
+
+      let waMsg = `*Mondal Book Store - Invoice* \n\n*Order ID:* ${payId}\n*Book:* ${bTitle}\n*Amount:* ${amountDisplay}\n*Status:* Confirmed`;
+      document.getElementById('wa_share_btn').href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(waMsg);
+      document.getElementById('success_box_1').style.display = 'block';
+    } catch(e) {
+      document.getElementById('success_box_1').style.display = 'block';
     }
   }
 </script>
