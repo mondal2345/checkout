@@ -162,7 +162,7 @@
 </div>
 
 <script type="text/javascript">
-  var orderType_1 = ""; var finalAmt_1 = 0; var foreignBaseAmt = 0; 
+  var orderType_1 = "Retail"; var finalAmt_1 = 0; var foreignBaseAmt = 0; 
   var BASE_SERVER_URL = "https://mondal-bookstore-backend.onrender.com";
   var PAYPAL_CLIENT_ID = "AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
@@ -170,9 +170,8 @@
   const cashfree = Cashfree({ mode: "production" });
 
   function getLiveMondalURLParams() {
-    let rawUrl = window.location.href;
-    let queryPart = rawUrl.includes('?') ? rawUrl.split('?')[1] : (rawUrl.includes('#') ? rawUrl.split('#')[1] : "");
-    return new URLSearchParams(queryPart);
+    // 🛡️ মেগা বুস্ট: উইন্ডো লোকেশন মেমোরি থেকে সরাসরি কোর সার্চ কন্টেন্ট ফিল্টার ভাই
+    return new URLSearchParams(window.location.search);
   }
 
   async function loadAndPrefillEngine() {
@@ -184,7 +183,7 @@
       }
       if (params.has('sku') || params.has('title')) {
         let price = parseFloat(params.get('price')) || 0;
-        let qty = parseInt(params.get('orderqty')) || 1;
+        let qty = parseInt(params.get('orderqty')) || parseInt(params.get('qty')) || 1; // 🎯 উভয় কি-ওয়ার্ডের সেফটি ব্যাকআপ ভাই
         
         let rawFPrice = params.get('f_price');
         let fPriceParam = 0;
@@ -192,11 +191,11 @@
           fPriceParam = parseFloat(rawFPrice) || 0;
         }
         
-        finalAmt_1 = price * qty;
+        finalAmt_1 = price; // মেইন টোটাল ডাইরেক্ট লকড ভাই
         
-        // 🛡️ মেগা টাইপ ডিটেকশন কন্ডিশনাল ইঞ্জিন ভাই
-        let rawType = params.get('type') || 'Retail';
-        if (rawType.toLowerCase() === 'business' || rawType.toLowerCase() === 'wholesale') {
+        // 🛡️ মেগা টাইপ ডিটেকশন কন্ডিশনাল ফিক্স ইঞ্জিন (শতভাগ ব্রাউজার প্রুফ লজিক ভাই)
+        let rawType = params.get('type') ? params.get('type').toString().trim().toLowerCase() : "retail";
+        if (rawType === 'business' || rawType === 'wholesale') {
             orderType_1 = "Business";
             let typeLabel = document.getElementById('lbl_type');
             typeLabel.innerText = "Business Order (Wholesale) 💼";
@@ -209,13 +208,13 @@
         }
         
         if(fPriceParam > 0) {
-           foreignBaseAmt = fPriceParam * qty;
+           foreignBaseAmt = fPriceParam;
            document.getElementById('paypal_global_btn').style.display = "block";
         } else {
            document.getElementById('paypal_global_btn').style.display = "none";
         }
 
-        // 📝 সমস্ত প্রি-ফিল্ড ডেটা নিখুঁতভাবে ইনজেক্ট করা হচ্ছে ভাই
+        // 📝 সমস্ত প্রি-ফিল্ড ডেটা স্ক্রিনে রেন্ডার করা হচ্ছে ভাই
         document.getElementById('lbl_title').innerText = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
         document.getElementById('lbl_sku').innerText = params.get('sku') || '-';
         document.getElementById('lbl_publisher').innerText = decodeURIComponent(params.get('publisher') || '-').replace(/\+/g, ' ');
@@ -223,8 +222,12 @@
         document.getElementById('lbl_binding').innerText = decodeURIComponent(params.get('binding') || '-').replace(/\+/g, ' ');
         document.getElementById('lbl_condition').innerText = decodeURIComponent(params.get('condition') || '-').replace(/\+/g, ' ');
         document.getElementById('lbl_year').innerText = params.get('year') || '-';
-        document.getElementById('lbl_base_price').innerText = price;
-        document.getElementById('lbl_order_qty').innerText = qty;
+        
+        // পাইকারি বা রিটেল রেট সুন্দর করে ভাগ করে রিড করার লজিক ভাই
+        let unitPriceDisplay = orderType_1 === "Business" ? (price / 5).toFixed(0) : price;
+        document.getElementById('lbl_base_price').innerText = unitPriceDisplay;
+        document.getElementById('lbl_order_qty').innerText = orderType_1 === "Business" ? "5 (Batch)" : qty;
+        
         document.getElementById('sum_price_1').innerText = "₹" + finalAmt_1;
 
         let cs = document.getElementById('c_select_1');
