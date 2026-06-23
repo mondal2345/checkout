@@ -183,7 +183,7 @@
       }
       if (params.has('sku') || params.has('title')) {
         let price = parseFloat(params.get('price')) || 0;
-        let qty = parseInt(params.get('orderqty')) || parseInt(params.get('qty')) || 1; // 🎯 উভয় কি-ওয়ার্ডের সেফটি ব্যাকআপ ভাই
+        let qty = parseInt(params.get('orderqty')) || parseInt(params.get('qty')) || 1;
         
         let rawFPrice = params.get('f_price');
         let fPriceParam = 0;
@@ -191,11 +191,12 @@
           fPriceParam = parseFloat(rawFPrice) || 0;
         }
         
-        finalAmt_1 = price; // মেইন টোটাল ডাইরেক্ট লকড ভাই
+        finalAmt_1 = price; // মেইন পেয়াবেল অ্যামাউন্ট লক
         
-        // 🛡️ মেগা টাইপ ডিটেকশন কন্ডিশনাল ফিক্স ইঞ্জিন (শতভাগ ব্রাউজার প্রুফ লজিক ভাই)
-        let rawType = params.get('type') ? params.get('type').toString().trim().toLowerCase() : "retail";
-        if (rawType === 'business' || rawType === 'wholesale') {
+        // 🎯 [শতভাগ ফিক্সড টাইপ ডিটেকশন]: ইনসেনসিটিভ রেগুলার এক্সপ্রেশন দিয়ে চেক, কোন এরর হবে না ভাই!
+        let rawType = params.get('type') ? params.get('type').toString().trim() : "Retail";
+        
+        if (/business/i.test(rawType) || /wholesale/i.test(rawType) || bTitle.includes("5 Copies")) {
             orderType_1 = "Business";
             let typeLabel = document.getElementById('lbl_type');
             typeLabel.innerText = "Business Order (Wholesale) 💼";
@@ -214,8 +215,9 @@
            document.getElementById('paypal_global_btn').style.display = "none";
         }
 
-        // 📝 সমস্ত প্রি-ফিল্ড ডেটা স্ক্রিনে রেন্ডার করা হচ্ছে ভাই
-        document.getElementById('lbl_title').innerText = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
+        // 📝 ডাটা প্রি-ফিল্ড ইনজেকশন ভাই
+        let bTitle = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
+        document.getElementById('lbl_title').innerText = bTitle;
         document.getElementById('lbl_sku').innerText = params.get('sku') || '-';
         document.getElementById('lbl_publisher').innerText = decodeURIComponent(params.get('publisher') || '-').replace(/\+/g, ' ');
         document.getElementById('lbl_author').innerText = decodeURIComponent(params.get('author') || '-').replace(/\+/g, ' ');
@@ -223,10 +225,14 @@
         document.getElementById('lbl_condition').innerText = decodeURIComponent(params.get('condition') || '-').replace(/\+/g, ' ');
         document.getElementById('lbl_year').innerText = params.get('year') || '-';
         
-        // পাইকারি বা রিটেল রেট সুন্দর করে ভাগ করে রিড করার লজিক ভাই
-        let unitPriceDisplay = orderType_1 === "Business" ? (price / 5).toFixed(0) : price;
-        document.getElementById('lbl_base_price').innerText = unitPriceDisplay;
-        document.getElementById('lbl_order_qty').innerText = orderType_1 === "Business" ? "5 (Batch)" : qty;
+        // 💰 প্রাইস ও ব্যাচ ক্যালকুলেশন ফিক্স ভাই
+        if (orderType_1 === "Business") {
+            document.getElementById('lbl_base_price').innerText = (price / 5).toFixed(0);
+            document.getElementById('lbl_order_qty').innerText = "5 (Batch)";
+        } else {
+            document.getElementById('lbl_base_price').innerText = price;
+            document.getElementById('lbl_order_qty').innerText = qty;
+        }
         
         document.getElementById('sum_price_1').innerText = "₹" + finalAmt_1;
 
