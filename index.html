@@ -210,6 +210,14 @@
     return new URLSearchParams(window.location.search);
   }
 
+  async function loadAndPrefillEngine() {
+    try {
+      const params = getLiveMondalURLParams();
+      if (params.has('cf_id')) {
+        executeSheetSaveAfterPayment(params.get('cf_id'), "Cashfree Auto Paid", "INR " + finalAmt_1);
+        return;
+      }
+
   function updateDial_1() { 
     let c = document.getElementById('c_select_1').value; 
     document.getElementById('code_1').value = dialCodes[c] || "+"; 
