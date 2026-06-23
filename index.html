@@ -241,13 +241,6 @@
 
   async function payViaCashfreeEngine() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
-    
-    const params = getLiveMondalURLParams();
-    let backupInrPrice = parseFloat(params.get('price')) || 0;
-    if(backupInrPrice > 0) {
-      finalAmt_1 = backupInrPrice;
-    }
-
     document.getElementById('pay_loader_btn').innerText = "Opening Gateway...";
     document.getElementById('pay_loader_btn').disabled = true;
     saveFormToLocalStorage();
@@ -280,6 +273,7 @@
       document.getElementById('pay_loader_btn').innerText = "💳 Option A: Pay via Cashfree Gateway (INR)";
     }
   }
+
 
   function goToManualQRStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
