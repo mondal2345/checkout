@@ -49,7 +49,7 @@
       <tr><td class="spec-label">Binding:</td><td id="lbl_binding">-</td></tr>
       <tr><td class="spec-label">Condition:</td><td id="lbl_condition">-</td></tr>
       <tr><td class="spec-label">Year:</td><td id="lbl_year">-</td></tr>
-      <tr><td class="spec-label">Order Type:</td><td id="lbl_type" style="font-weight: bold; color: #e65100;">-</td></tr>
+      <tr><td class="spec-label">Order Type:</td><td id="lbl_type" style="font-weight: bold;">-</td></tr>
       <tr><td class="spec-label">Unit Price:</td><td style="font-weight: bold; color: #2e7d32;">₹<span id="lbl_base_price">0</span></td></tr>
       <tr><td class="spec-label">Selected Qty:</td><td id="lbl_order_qty" style="font-weight: bold;">1</td></tr>
     </table>
@@ -138,32 +138,31 @@
   </div>
 
   <div id="success_box_1" class="step" style="padding:20px 10px;">
-     <div id="printable_invoice" style="border: 2px dashed #1a73e8; padding: 20px; background: #fafafa; border-radius: 12px; text-align: left; font-size: 14px; margin-bottom: 25px;">
-       <h3 style="text-align:center; color:#1a73e8; margin-top:0; font-size: 20px;">🧾 Mondal Book Store<br><span style="font-size:12px; font-weight:normal; color:#666;">Order Payment Receipt</span></h3>
-       <hr style="border-top: 1px dashed #ccc; margin: 15px 0;">
-       <p><b>Order ID / Payment ID:</b> <span id="inv_id">-</span></p>
-       <p><b>Date:</b> <span id="inv_date">-</span></p>
-       <p><b>UTR / Reference ID:</b> <span id="inv_txid" style="color:green; font-weight:bold;">-</span></p>
-       <p><b>Book Details:</b> <span id="inv_book">-</span></p>
-       <p><b>Total Paid:</b> <span style="color:#2e7d32; font-weight:bold;"><span id="inv_total">0</span></span></p>
-       <hr style="border-top: 1px solid #eee;">
-       <p><b>Shipping Name:</b> <span id="inv_name">-</span></p>
-       <p><b>Mobile:</b> <span id="inv_phone">-</span></p>
-       <p><b>Address:</b> <span id="inv_address">-</span></p>
-       <p id="email_status_text" style="text-align: center; color: #1a73e8; font-weight: bold; font-size: 12px; margin-top: 15px; background: #e8f0fe; padding: 6px; border-radius: 4px;">📩 A confirmation receipt has been sent to your email!</p>
-     </div>
-     
-     <div style="display:flex; flex-direction:column; gap:12px; max-width:300px; margin:auto;">
-       <button class="btn-blue" onclick="window.print()" style="background:#7f8c8d;">🖨️ Download / Print PDF</button>
-       <a id="wa_share_btn" target="_blank" class="btn-green" style="background:#25D366; font-weight:bold;">💬 Receive Copy on WhatsApp</a>
-       <a href="https://www.mondalbooks.com/" class="btn-blue" style="background:#1a73e8; font-weight:bold;">← Continue Shopping</a>
-     </div>
+      <div id="printable_invoice" style="border: 2px dashed #1a73e8; padding: 20px; background: #fafafa; border-radius: 12px; text-align: left; font-size: 14px; margin-bottom: 25px;">
+        <h3 style="text-align:center; color:#1a73e8; margin-top:0; font-size: 20px;">🧾 Mondal Book Store<br><span style="font-size:12px; font-weight:normal; color:#666;">Order Payment Receipt</span></h3>
+        <hr style="border-top: 1px dashed #ccc; margin: 15px 0;">
+        <p><b>Order ID / Payment ID:</b> <span id="inv_id">-</span></p>
+        <p><b>Date:</b> <span id="inv_date">-</span></p>
+        <p><b>UTR / Reference ID:</b> <span id="inv_txid" style="color:green; font-weight:bold;">-</span></p>
+        <p><b>Book Details:</b> <span id="inv_book">-</span></p>
+        <p><b>Total Paid:</b> <span style="color:#2e7d32; font-weight:bold;"><span id="inv_total">0</span></span></p>
+        <hr style="border-top: 1px solid #eee;">
+        <p><b>Shipping Name:</b> <span id="inv_name">-</span></p>
+        <p><b>Mobile:</b> <span id="inv_phone">-</span></p>
+        <p><b>Address:</b> <span id="inv_address">-</span></p>
+        <p id="email_status_text" style="text-align: center; color: #1a73e8; font-weight: bold; font-size: 12px; margin-top: 15px; background: #e8f0fe; padding: 6px; border-radius: 4px;">📩 A confirmation receipt has been sent to your email!</p>
+      </div>
+      
+      <div style="display:flex; flex-direction:column; gap:12px; max-width:300px; margin:auto;">
+        <button class="btn-blue" onclick="window.print()" style="background:#7f8c8d;">🖨️ Download / Print PDF</button>
+        <a id="wa_share_btn" target="_blank" class="btn-green" style="background:#25D366; font-weight:bold;">💬 Receive Copy on WhatsApp</a>
+        <a href="https://www.mondalbooks.com/" class="btn-blue" style="background:#1a73e8; font-weight:bold;">← Continue Shopping</a>
+      </div>
   </div>
 </div>
 
 <script type="text/javascript">
   var orderType_1 = ""; var finalAmt_1 = 0; var foreignBaseAmt = 0; 
-  // 🔽 গুগল স্ক্রিপ্ট বদলে আপনার নতুন লাইভ Render সার্ভার লিংক যুক্ত করা হয়েছে ভাই
   var BASE_SERVER_URL = "https://mondal-bookstore-backend.onrender.com";
   var PAYPAL_CLIENT_ID = "AV1JxQY1r65zD0jIeWlcpFWgPsUiWjvwDybKuiwZLUUGCKehAnfUKT3k2Gc_18fmnBceo6-tvR9ftaD7";
   var dialCodes = {"India":"+91","Bangladesh":"+880","Kuwait":"+965","Malaysia":"+60","Nepal":"+977","Pakistan":"+92","Qatar":"+974","UAE":"+971","UK":"+44","USA":"+1"};
@@ -194,7 +193,20 @@
         }
         
         finalAmt_1 = price * qty;
-        orderType_1 = params.get('type') || 'Retail';
+        
+        // 🛡️ মেগা টাইপ ডিটেকশন কন্ডিশনাল ইঞ্জিন ভাই
+        let rawType = params.get('type') || 'Retail';
+        if (rawType.toLowerCase() === 'business' || rawType.toLowerCase() === 'wholesale') {
+            orderType_1 = "Business";
+            let typeLabel = document.getElementById('lbl_type');
+            typeLabel.innerText = "Business Order (Wholesale) 💼";
+            typeLabel.style.color = "#1a73e8";
+        } else {
+            orderType_1 = "Retail";
+            let typeLabel = document.getElementById('lbl_type');
+            typeLabel.innerText = "Retail Order 🚀";
+            typeLabel.style.color = "#e65100";
+        }
         
         if(fPriceParam > 0) {
            foreignBaseAmt = fPriceParam * qty;
@@ -203,6 +215,7 @@
            document.getElementById('paypal_global_btn').style.display = "none";
         }
 
+        // 📝 সমস্ত প্রি-ফিল্ড ডেটা নিখুঁতভাবে ইনজেক্ট করা হচ্ছে ভাই
         document.getElementById('lbl_title').innerText = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
         document.getElementById('lbl_sku').innerText = params.get('sku') || '-';
         document.getElementById('lbl_publisher').innerText = decodeURIComponent(params.get('publisher') || '-').replace(/\+/g, ' ');
@@ -211,7 +224,6 @@
         document.getElementById('lbl_condition').innerText = decodeURIComponent(params.get('condition') || '-').replace(/\+/g, ' ');
         document.getElementById('lbl_year').innerText = params.get('year') || '-';
         document.getElementById('lbl_base_price').innerText = price;
-        document.getElementById('lbl_type').innerText = orderType_1 + " Order";
         document.getElementById('lbl_order_qty').innerText = qty;
         document.getElementById('sum_price_1').innerText = "₹" + finalAmt_1;
 
@@ -251,14 +263,13 @@
     localStorage.setItem('m_email', document.getElementById('email_1').value);
   }
 
-  // 💳 Option A: Pay via Cashfree (নতুন সিকিউর JSON আর্কিটেকচার)
+  // 💳 Option A: Pay via Cashfree
   async function payViaCashfreeEngine() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
     document.getElementById('pay_loader_btn').innerText = "Opening Gateway...";
     document.getElementById('pay_loader_btn').disabled = true;
     saveFormToLocalStorage();
     
-    // রেন্ডার এপিআই এর সাথে ম্যাপিং
     let sessionUrl = BASE_SERVER_URL + "/api/create-cashfree-order";
     let payload = {
       amount: finalAmt_1,
@@ -301,7 +312,7 @@
     let trx = document.getElementById('trx_1').value.trim(); if(!trx) return alert("Enter UTR ID!");
     document.getElementById('final_btn_1').innerText = "Processing..."; document.getElementById('final_btn_1').disabled = true;
     saveFormToLocalStorage();
-    await executeSheetSaveAfterPayment(trx, "UPI Manual Paid", "₹" + finalAmt_1);
+    await executeSheetSaveAfterPayment(trx, orderType_1 + " Manual Paid", "₹" + finalAmt_1);
   }
 
   // 🌍 Option C: PayPal Multi-Currency Engine
@@ -373,7 +384,7 @@
     document.getElementById('paypal_sdk_holder').appendChild(script);
   }
 
-  // 📦 ফাইনাল অর্ডার গুগল শিটে সেভ এবং ইনভয়েস ইমেল করার মেইন ক্লাউড ট্রিগার
+  // 📦 ফাইনাল অর্ডার গুগল শিটে সেভ এবং ইনভয়েস ইমেল করার মেইন ক্লাউড ট্রিগার
   async function executeSheetSaveAfterPayment(payId, payMethodText, amountDisplay) {
     let today = new Date().toLocaleString();
     let bTitle = document.getElementById('lbl_title').innerText || "Book Item";
@@ -386,13 +397,12 @@
     let cState = localStorage.getItem('m_state') || document.getElementById('c_select_1').value;
     let cEmail = localStorage.getItem('m_email') || document.getElementById('email_1').value;
 
-    // নতুন Node.js স্ট্রাকচার অনুযায়ী পে-লোড ম্যাপিং
     let orderPayload = {
       order_id: payId,
       order_date: today,
       sku: bSku,
       book_title: bTitle,
-      order_type: payMethodText,
+      order_type: orderType_1 + " (" + payMethodText + ")", // 🔥 মেগা ট্র্যাকিং: অর্ডার টাইপ সঠিকভাবে শিটে যাবে ভাই!
       final_amount: amountDisplay,
       trx_id: payId,
       cust_name: cName,
@@ -404,7 +414,6 @@
     };
     
     try {
-      // রেন্ডার সার্ভারের /api/save-order এন্ডপয়েন্টে ডেটা হিট করানো হচ্ছে ভাই
       let saveUrl = BASE_SERVER_URL + "/api/save-order";
       await fetch(saveUrl, {
         method: "POST",
