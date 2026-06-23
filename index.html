@@ -193,9 +193,11 @@
         
         finalAmt_1 = price; // মেইন পেয়াবেল অ্যামাউন্ট লক
         
-        // 🎯 [শতভাগ ফিক্সড টাইপ ডিটেকশন]: ইনসেনসিটিভ রেগুলার এক্সপ্রেশন দিয়ে চেক, কোন এরর হবে না ভাই!
+        // 📝 ডাটা আগে রিড করে টাইটেল ভেরিয়েবল তৈরি করা হলো ভাই
+        let bTitle = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
         let rawType = params.get('type') ? params.get('type').toString().trim() : "Retail";
         
+        // 🎯 [পারফেক্ট টাইপ ডিটেকশন]: এবার ভেরিয়েবল ডিফাইন করা আছে, কোনো এরর আসবে না ভাই!
         if (/business/i.test(rawType) || /wholesale/i.test(rawType) || bTitle.includes("5 Copies")) {
             orderType_1 = "Business";
             let typeLabel = document.getElementById('lbl_type');
@@ -215,8 +217,7 @@
            document.getElementById('paypal_global_btn').style.display = "none";
         }
 
-        // 📝 ডাটা প্রি-ফিল্ড ইনজেকশন ভাই
-        let bTitle = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
+        // 📝 বাকি সমস্ত ডাটা প্রি-ফিল্ড ইনজেকশন ভাই
         document.getElementById('lbl_title').innerText = bTitle;
         document.getElementById('lbl_sku').innerText = params.get('sku') || '-';
         document.getElementById('lbl_publisher').innerText = decodeURIComponent(params.get('publisher') || '-').replace(/\+/g, ' ');
@@ -225,7 +226,7 @@
         document.getElementById('lbl_condition').innerText = decodeURIComponent(params.get('condition') || '-').replace(/\+/g, ' ');
         document.getElementById('lbl_year').innerText = params.get('year') || '-';
         
-        // 💰 প্রাইস ও ব্যাচ ক্যালকুলেশন ফিক্স ভাই
+        // 💰 প্রাইস ও ব্যাচ কোয়ান্টিটি ডিসপ্লে ফিক্স ভাই
         if (orderType_1 === "Business") {
             document.getElementById('lbl_base_price').innerText = (price / 5).toFixed(0);
             document.getElementById('lbl_order_qty').innerText = "5 (Batch)";
