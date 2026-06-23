@@ -395,6 +395,7 @@
         let price = parseFloat(params.get('price')) || 0;
         let qty = parseInt(params.get('orderqty')) || parseInt(params.get('qty')) || 1;
         
+        // 🎯 [১. ডাটা ক্যাচিং ফিক্স]: সবার আগে প্যারামিটার থেকে কলাম X এর রুপি রেট নেওয়া হলো ভাই
         let rawFPrice = params.get('f_price') || params.get('foreign_price') || params.get('foreignPrice') || "0";
         let fPriceParam = 0;
         if (rawFPrice && rawFPrice.toString().trim() !== "" && rawFPrice !== "null" && rawFPrice !== "undefined") {
@@ -402,6 +403,10 @@
         }
         
         finalAmt_1 = price; 
+        
+        // 🎯 [২. মোস্টলি ইম্পর্ট্যান্ট লক]: নিচে হিসাব করার ঠিক আগেই গ্লোবাল ভেরিয়েবলে মানটি ঢুকিয়ে দেওয়া হলো ভাই!
+        foreignBaseAmtInr = fPriceParam; 
+        
         let bTitle = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
         let rawType = params.get('type') ? params.get('type').toString().trim() : "Retail";
         
@@ -421,12 +426,11 @@
             }
         }
         
-        // 🎯 [🌍 মেগা কন্ডিশনাল গেটওয়ে লক এবং কারেন্সি মোড ফিক্স ভাই]
-        if (fPriceParam > 0 || params.get('type') === "International") {
+        // 🎯 [🌍 ইন্টারন্যাশনাল মোড এবং ওয়ান-টাইম ডাইনামিক রেন্ডারিং ফিক্স ভাই]
+        if (foreignBaseAmtInr > 0 || params.get('type') === "International") {
            isInternationalMode = true;
-           foreignBaseAmtInr = fPriceParam;
            
-           // ১. প্রথম পেজের কারেন্সি সাইন এবং কন্টেন্ট পুরো ডলারে ($) রূপান্তর ভাই
+           // ১ ডলার = ৮৩.৫ টাকা স্ট্যান্ডার্ড কনভার্সন হিসাব ভাই
            let usdUnitPrice = (foreignBaseAmtInr / 83.50);
            let usdTotalPayable = usdUnitPrice;
            
@@ -434,11 +438,12 @@
              usdUnitPrice = (usdUnitPrice / 5);
            }
            
+           // প্রথম পেজে সরাসরি ইউএস ডলার ($) সাইন পুশ লক ভাই!
            if(document.getElementById('lbl_currency_sign')) document.getElementById('lbl_currency_sign').innerText = "$";
            if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = usdUnitPrice.toFixed(2);
            if(document.getElementById('sum_price_1')) document.getElementById('sum_price_1').innerText = "$" + usdTotalPayable.toFixed(2) + " USD";
            
-           // ②. শিপিং পেজে লোকাল ইন্ডিয়ান গেটওয়ে বাটন চিরতরে হাইড এবং শুধু পেপ্যাল শো ভাই!
+           // শিপিং পেজে লোকাল ইন্ডিয়ান গেটওয়ে বাটন চিরতরে হাইড এবং শুধু পেপ্যাল শো ভাই!
            if(document.getElementById('cashfree_gate_btn')) document.getElementById('cashfree_gate_btn').style.display = "none";
            if(document.getElementById('manual_upi_btn')) document.getElementById('manual_upi_btn').style.display = "none";
            if(document.getElementById('paypal_global_btn')) {
@@ -446,7 +451,7 @@
              document.getElementById('paypal_global_btn').innerText = "🌍 Proceed via PayPal Global Secure (USD)";
            }
         } else {
-           // লোকাল ইন্ডিয়ান মোড (INR) ভাই
+           // লোকাল ইন্ডিয়ান মোড (INR)
            isInternationalMode = false;
            if(document.getElementById('lbl_currency_sign')) document.getElementById('lbl_currency_sign').innerText = "₹";
            if(document.getElementById('cashfree_gate_btn')) document.getElementById('cashfree_gate_btn').style.display = "block";
@@ -470,7 +475,7 @@
         if(document.getElementById('lbl_year')) document.getElementById('lbl_year').innerText = params.get('year') || '-';
         if(document.getElementById('lbl_order_qty')) document.getElementById('lbl_order_qty').innerText = (orderType_1 === "Business") ? "5 (Batch)" : qty;
 
-        // গ্লোবাল ডায়াল কোড ড্রপডাউন জেনারেটর (ডিফল্ট USA সিলেক্ট থাকবে ইন্টারন্যাশনাল মোডে ভাই!)
+        // দেশের ড্রপডাউন (ইন্টারন্যাশনাল মোডে USA ডিফল্ট লক ভাই!)
         let cs = document.getElementById('c_select_1');
         if (cs && cs.innerHTML === '') {
           let sortedCountries = Object.keys(dialCodes).sort();
