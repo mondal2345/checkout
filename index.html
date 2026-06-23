@@ -461,6 +461,99 @@
     document.getElementById('paypal_sdk_holder').appendChild(script);
   }
   }
+  // 🎯 ইউআরএল প্যারামিটার রিড এবং ব্ল্যাঙ্ক-স্ক্রিন প্রোটেকশন মেগা ইঞ্জিন ভাই
+  async function loadAndPrefillEngine() {
+    try {
+      const params = getLiveMondalURLParams();
+      
+      // যদি ক্যাশফ্রি রিটার্ন আইডি থাকে
+      if (params.has('cf_id')) {
+        executeSheetSaveAfterPayment(params.get('cf_id'), "Cashfree Auto Paid", "INR " + finalAmt_1);
+        return;
+      }
+      
+      // মূল ডাটা লোডিং ব্লক ভাই
+      if (params.has('sku') || params.has('title')) {
+        let price = parseFloat(params.get('price')) || 0;
+        let qty = parseInt(params.get('orderqty')) || parseInt(params.get('qty')) || 1;
+        
+        // 🎯 [বুলেটপ্রুফ চেক]: f_price অথবা foreign_price যে নামেই আসুক, ক্যাচ করবে ভাই!
+        let rawFPrice = params.get('f_price') || params.get('foreign_price') || params.get('foreignPrice') || "0";
+        let fPriceParam = 0;
+        
+        if (rawFPrice && rawFPrice.toString().trim() !== "" && rawFPrice !== "null" && rawFPrice !== "undefined") {
+          fPriceParam = parseFloat(rawFPrice.toString().replace(/[^0-9.]/g, '')) || 0;
+        }
+        
+        finalAmt_1 = price; // মূল রুপি দাম লক
+        
+        // টাইটেল এবং বাকি তথ্য রিড
+        let bTitle = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
+        let rawType = params.get('type') ? params.get('type').toString().trim() : "Retail";
+        
+        // বিজনেস অর্ডার ডিটেকশন ফিক্স
+        if (/business/i.test(rawType) || /wholesale/i.test(rawType) || bTitle.includes("(5 Copies)") || bTitle.includes("5 Copies")) {
+            orderType_1 = "Business";
+            let typeLabel = document.getElementById('lbl_type');
+            if(typeLabel) {
+              typeLabel.innerText = "Business Order (Wholesale) 💼";
+              typeLabel.style.color = "#1a73e8";
+            }
+        } else {
+            orderType_1 = "Retail";
+            let typeLabel = document.getElementById('lbl_type');
+            if(typeLabel) {
+              typeLabel.innerText = "Retail Order 🚀";
+              typeLabel.style.color = "#e65100";
+            }
+        }
+        
+        // 🌍 পেপ্যাল বাটন ভিজিবিলিটি ট্র্যাকার লক ভাই
+        if(fPriceParam > 0) {
+           foreignBaseAmtInr = fPriceParam;
+           if(document.getElementById('paypal_global_btn')) {
+             document.getElementById('paypal_global_btn').style.display = "block";
+           }
+        } else {
+           if(document.getElementById('paypal_global_btn')) {
+             document.getElementById('paypal_global_btn').style.display = "none";
+           }
+        }
+
+        // 📝 টেক্সট নোড সেফটি ইনজেকশন ভাই (যাতে কোনো এলিমেন্ট মিসিং হলেও স্ক্রিপ্ট বন্ধ না হয়)
+        if(document.getElementById('lbl_title')) document.getElementById('lbl_title').innerText = bTitle;
+        if(document.getElementById('lbl_sku')) document.getElementById('lbl_sku').innerText = params.get('sku') || '-';
+        if(document.getElementById('lbl_publisher')) document.getElementById('lbl_publisher').innerText = decodeURIComponent(params.get('publisher') || '-').replace(/\+/g, ' ');
+        if(document.getElementById('lbl_author')) document.getElementById('lbl_author').innerText = decodeURIComponent(params.get('author') || '-').replace(/\+/g, ' ');
+        if(document.getElementById('lbl_binding')) document.getElementById('lbl_binding').innerText = decodeURIComponent(params.get('binding') || '-').replace(/\+/g, ' ');
+        if(document.getElementById('lbl_condition')) document.getElementById('lbl_condition').innerText = decodeURIComponent(params.get('condition') || '-').replace(/\+/g, ' ');
+        if(document.getElementById('lbl_year')) document.getElementById('lbl_year').innerText = params.get('year') || '-';
+        
+        if (orderType_1 === "Business") {
+            if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = (price / 5).toFixed(0);
+            if(document.getElementById('lbl_order_qty')) document.getElementById('lbl_order_qty').innerText = "5 (Batch)";
+        } else {
+            if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = price;
+            if(document.getElementById('lbl_order_qty')) document.getElementById('lbl_order_qty').innerText = qty;
+        }
+        
+        if(document.getElementById('sum_price_1')) document.getElementById('sum_price_1').innerText = "₹" + finalAmt_1;
+
+        // গ্লোবাল ডায়াল কোড ড্রপডাউন জেনারেটর
+        let cs = document.getElementById('c_select_1');
+        if (cs && cs.innerHTML === '') {
+          let sortedCountries = Object.keys(dialCodes).sort();
+          sortedCountries.forEach(c => { 
+            cs.innerHTML += '<option value="'+c+'">'+c+'</option>'; 
+          });
+          cs.value = "India"; 
+          updateDial_1();
+        }
+      }
+    } catch(e) {
+      console.log("Pre-fill error blocked by safety engine: " + e.message);
+    }
+  }
 </script>
 </body>
 </html>
