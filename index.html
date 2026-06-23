@@ -240,8 +240,17 @@
     localStorage.setItem('m_email', document.getElementById('email_1').value);
   }
 
+  // 🎯 [১০০% ফিক্সড ও সেফটি লকড ক্যাশফ্রি পেমেন্ট ইঞ্জিন ভাই]
   async function payViaCashfreeEngine() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
+    
+    // 🛡️ ব্যাকগ্রাউন্ড সেফটি লক: লোকাল অর্ডারের ক্ষেত্রে ইউআরএল থেকে আসল INR রুপি প্রাইস আবার মেমরিতে রিলোড হবে ভাই!
+    const params = getLiveMondalURLParams();
+    let backupInrPrice = parseFloat(params.get('price')) || 0;
+    if(backupInrPrice > 0) {
+      finalAmt_1 = backupInrPrice;
+    }
+
     document.getElementById('pay_loader_btn').innerText = "Opening Gateway...";
     document.getElementById('pay_loader_btn').disabled = true;
     saveFormToLocalStorage();
