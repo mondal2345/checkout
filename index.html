@@ -210,14 +210,6 @@
     return new URLSearchParams(window.location.search);
   }
 
-  async function loadAndPrefillEngine() {
-    try {
-      const params = getLiveMondalURLParams();
-      if (params.has('cf_id')) {
-        executeSheetSaveAfterPayment(params.get('cf_id'), "Cashfree Auto Paid", "INR " + finalAmt_1);
-        return;
-      }
-
   function updateDial_1() { 
     let c = document.getElementById('c_select_1').value; 
     document.getElementById('code_1').value = dialCodes[c] || "+"; 
@@ -249,6 +241,13 @@
 
   async function payViaCashfreeEngine() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
+    
+    const params = getLiveMondalURLParams();
+    let backupInrPrice = parseFloat(params.get('price')) || 0;
+    if(backupInrPrice > 0) {
+      finalAmt_1 = backupInrPrice;
+    }
+
     document.getElementById('pay_loader_btn').innerText = "Opening Gateway...";
     document.getElementById('pay_loader_btn').disabled = true;
     saveFormToLocalStorage();
@@ -281,7 +280,6 @@
       document.getElementById('pay_loader_btn').innerText = "💳 Option A: Pay via Cashfree Gateway (INR)";
     }
   }
-
 
   function goToManualQRStep() {
     if(!validateShippingForm()) return alert("Please fill all required fields!");
@@ -317,7 +315,7 @@
     
     let selectedCurr = selectEl.value; 
     let symbol = selectedOption.getAttribute('data-symbol');
-    let isZeroDigit = selectedOption.getAttribute('data-zero') === "true"; 
+    let isZeroDigit = selectedOption.getAttribute('data-zero'] === "true"; 
     let fallbackSubRate = parseFloat(selectedOption.getAttribute('data-rate')); 
 
     saveFormToLocalStorage();
