@@ -401,13 +401,14 @@
     document.getElementById('paypal_sdk_holder').appendChild(script);
   }
 
+  // ❌ আপনার কোডের ভুল জায়গাটি দেখুন ভাই:
   async function loadAndPrefillEngine() {
     try {
       const params = getLiveMondalURLParams();
       if (params.has('cf_id')) {
         executeSheetSaveAfterPayment(params.get('cf_id'), "Cashfree Auto Paid", "INR " + finalAmt_1);
         return;
-      }
+      } // <--- এইখানে ফাংশনটা মাঝপথে শেষ হয়ে গেছে, আর বাকি নিচের সম্পূর্ণ আসল লজিকটা ওপেন রাস্তায় পড়ে ক্র্যাশ করেছে!
       
       if (params.has('sku') || params.has('title')) {
         let price = parseFloat(params.get('price')) || 0;
