@@ -365,46 +365,60 @@
     updatePayPalCurrencyEngine();
   }
 
-  // 🎯 [মেগা লাইভ এক্সচেঞ্জ রেট কারেন্সি কনভার্টার ইঞ্জিন ভাই]
+  // 🌍 বিশ্ববাজারের লাইভ ওঠানামার সাথে ম্যাচ করা মেগা কারেন্সি কনভার্টার ইঞ্জিন ভাই
   async function updatePayPalCurrencyEngine() {
     let selectEl = document.getElementById('paypal_currency_select');
     let selectedOption = selectEl.options[selectEl.selectedIndex];
     
-    let selectedCurr = selectEl.value;
+    let selectedCurr = selectEl.value; // কাস্টমারের সিলেক্ট করা কারেন্সি কোড (যেমন: EUR, GBP, TWD)
     let symbol = selectedOption.getAttribute('data-symbol');
-    let currencySubRate = parseFloat(selectedOption.getAttribute('data-rate')); // USD-এর সাপেক্ষে ঐ কারেন্সির রেট
-    let isZeroDigit = selectedOption.getAttribute('data-zero') === "true";
+    let isZeroDigit = selectedOption.getAttribute('data-zero') === "true"; // দশমিক ছাড়া কারেন্সি সেফটি চেক
     
+    // ব্যাকআপ ফলব্যাক রেট (যদি কোনো কারণে কাস্টমারের নেটওয়ার্ক স্লো থাকে ভাই)
+    let fallbackSubRate = parseFloat(selectedOption.getAttribute('data-rate')); 
+
     saveFormToLocalStorage();
     document.getElementById('paypal_status_msg').style.display = "block";
 
-    // ⚡ ১. প্রথমে গ্লোবাল লাইভ মার্কেট রেট অনুযায়ী শিটের কলাম X (INR)-কে বেস ইউএস ডলারে (USD) কনভার্ট ভাই!
-    let inrToUsdRate = 1 / 83.50; // ফলব্যাক রেট (১ ডলার = ৮৩.৫ টাকা)
-    
+    // ক) প্রথমে লাইভ রেট অনুযায়ী আপনার শিটের কলাম X (INR)-কে বেস ইউএস ডলারে (USD) কনভার্ট ভাই
+    let inrToUsdRate = 1 / 83.50; // ডিফল্ট সেফটি রেট
+    let usdToSelectedCurrRate = fallbackSubRate; // ড্রপডাউন কারেন্সির ডিফল্ট রেট
+
     try {
-      // বিশ্ববাজারের লাইভ ফ্রী কারেন্সি এক্সচেঞ্জ ফিড ডাউনলোড ভাই
-      let response = await fetch("https://open.er-api.com/v6/latest/INR");
+      // 🚀 গ্লোবাল লাইভ কারেন্সি এপিআই কল (১ সেকেন্ডে বিশ্ববাজারের লাইভ ডাটা ডাউনলোড হবে ভাই)
+      let response = await fetch("https://open.er-api.com/v6/latest/USD");
       if (response.ok) {
         let exchangeData = await response.json();
-        if (exchangeData.rates && exchangeData.rates.USD) {
-          inrToUsdRate = exchangeData.rates.USD; // লাইভ রেট লোড হলো ভাই (যেমন: ০.০১২)
+        if (exchangeData.rates) {
+          // ১. লাইভ INR টু USD রেট ক্যালকুলেশন ভাই
+          let liveInrRate = exchangeData.rates.INR;
+          if (liveInrRate) {
+            inrToUsdRate = 1 / liveInrRate;
+          }
+          
+          // ২. 🎯 [মেগা সলভ]: ড্রপডাউনের কারেন্সির একদম লাইভ কারেন্ট রেট তুলে আনা ভাই (Fixes Daily Fluctuations)
+          if (exchangeData.rates[selectedCurr]) {
+            usdToSelectedCurrRate = exchangeData.rates[selectedCurr];
+            console.log("Live Market Rate Sync for " + selectedCurr + ": " + usdToSelectedCurrRate);
+          }
         }
       }
     } catch(err) {
-      console.log("Network delay, using precise fallback rate.");
+      console.log("Using static fallback rate due to internet refresh delay.");
     }
 
-    // ২. ভারতীয় রুপিকে প্রথমে ডলারে কনভার্ট করে তারপর সিলেক্ট করা গ্লোবাল কারেন্সিতে ট্রান্সফার ভাই
-    let baseUsdAmt = foreignBaseAmtInr * inrToUsdRate; 
-    let convertedAmt = baseUsdAmt * currencySubRate; // ড্রপডাউন অনুযায়ী কনভার্সন
+    // খ) ফাইনাল ম্যাথমেটিক্যাল ক্যালকুলেশন ইঞ্জিন ভাই
+    let baseUsdAmt = foreignBaseAmtInr * inrToUsdRate; // রুপি থেকে ডলারে রূপান্তর
+    let finalConvertedAmt = baseUsdAmt * usdToSelectedCurrRate; // ডলার থেকে লাইভ আন্তর্জাতিক কারেন্সিতে কনভার্ট ভাই!
     
-    // রাউন্ডিং ফিক্স
-    convertedAmt = isZeroDigit ? Math.round(convertedAmt).toString() : convertedAmt.toFixed(2);
+    // 🛡️ গেটওয়ে এরর লক: জিরো-ডেসিমেলে খুচরা কেটে ফেলা হবে, বাকিগুলোতে দশমিকের পর ২ ঘর থাকবে ভাই
+    finalConvertedAmt = isZeroDigit ? Math.round(finalConvertedAmt).toString() : finalConvertedAmt.toFixed(2);
     
     document.getElementById('paypal_symbol').innerText = symbol;
-    document.getElementById('paypal_converted_amt').innerText = convertedAmt;
+    document.getElementById('paypal_converted_amt').innerText = finalConvertedAmt;
     document.getElementById('paypal_txt_curr').innerText = selectedCurr;
     
+    // গ) পেপ্যাল এপিআই এবং সিকিউর বাটন রেন্ডার ইঞ্জিন ভাই
     let oldScript = document.getElementById('paypal_live_core_sdk');
     if(oldScript) oldScript.remove();
 
@@ -428,11 +442,11 @@
             <script>
               paypal.Buttons({
                 createOrder: function(data, actions) {
-                  return actions.order.create({ purchase_units: [{ amount: { currency_code: "${selectedCurr}", value: "${convertedAmt}" } }] });
+                  return actions.order.create({ purchase_units: [{ amount: { currency_code: "${selectedCurr}", value: "${finalConvertedAmt}" } }] });
                 },
                 onApprove: function(data, actions) {
                   return actions.order.capture().then(function(d) {
-                    window.parent.postMessage({ type: "PAYPAL_SUCCESS", id: d.id, currency: "${selectedCurr}", amountDisplay: "${symbol}${convertedAmt} ${selectedCurr}" }, "*");
+                    window.parent.postMessage({ type: "PAYPAL_SUCCESS", id: d.id, currency: "${selectedCurr}", amountDisplay: "${symbol}${finalConvertedAmt} ${selectedCurr}" }, "*");
                   });
                 }
               }).render('#btn');
@@ -445,64 +459,6 @@
     };
     document.getElementById('paypal_sdk_holder').appendChild(script);
   }
-
-  async function executeSheetSaveAfterPayment(payId, payMethodText, amountDisplay) {
-    let today = new Date().toLocaleString();
-    let bTitle = document.getElementById('lbl_title').innerText || "Book Item";
-    let bSku = document.getElementById('lbl_sku').innerText || "SKU_PRO";
-    
-    let cName = localStorage.getItem('m_name') || document.getElementById('name_1').value;
-    let cPhone = localStorage.getItem('m_phone') || document.getElementById('phone_1').value;
-    let cAddress = localStorage.getItem('m_addr') || document.getElementById('addr_1').value;
-    let cPin = localStorage.getItem('m_pin') || document.getElementById('pin_1').value;
-    let cState = localStorage.getItem('m_state') || document.getElementById('c_select_1').value;
-    let cEmail = localStorage.getItem('m_email') || document.getElementById('email_1').value;
-
-    let orderPayload = {
-      order_id: payId,
-      order_date: today,
-      sku: bSku,
-      book_title: bTitle,
-      order_type: orderType_1 + " (" + payMethodText + ")",
-      final_amount: amountDisplay,
-      trx_id: payId,
-      cust_name: cName,
-      cust_phone: cPhone,
-      cust_email: cEmail,
-      cust_address: cAddress,
-      cust_pin: cPin,
-      country: cState
-    };
-    
-    try {
-      let saveUrl = BASE_SERVER_URL + "/api/save-order";
-      await fetch(saveUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload)
-      });
-
-      document.getElementById('st3_manual_qr').style.display = 'none';
-      document.getElementById('st3_paypal').style.display = 'none';
-      
-      document.getElementById('inv_id').innerText = "INV-" + Math.floor(100000 + Math.random() * 900000);
-      document.getElementById('inv_date').innerText = today;
-      document.getElementById('inv_txid').innerText = payId;
-      document.getElementById('inv_book').innerText = bTitle + " [SKU: "+bSku+"]";
-      document.getElementById('inv_total').innerText = amountDisplay;
-      document.getElementById('inv_name').innerText = cName;
-      document.getElementById('inv_phone').innerText = cPhone;
-      document.getElementById('inv_address').innerText = cAddress + ", PIN: " + cPin + " (" + cState + ")";
-      
-      if(cEmail) document.getElementById('email_status_text').innerHTML = "✓ Official Invoice sent to: <span style='color:#2e7d32;'>" + cEmail + "</span>";
-      else document.getElementById('email_status_text').style.display = "none";
-
-      let waMsg = `*Mondal Book Store - Invoice* \n\n*Order ID:* ${payId}\n*Book:* ${bTitle}\n*Amount:* ${amountDisplay}\n*Status:* Confirmed`;
-      document.getElementById('wa_share_btn').href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(waMsg);
-      document.getElementById('success_box_1').style.display = 'block';
-    } catch(e) {
-      document.getElementById('success_box_1').style.display = 'block';
-    }
   }
 </script>
 </body>
