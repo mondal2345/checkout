@@ -52,6 +52,7 @@
       <tr><td class="spec-label">Order Type:</td><td id="lbl_type" style="font-weight: bold;">-</td></tr>
       <tr><td class="spec-label">Unit Price:</td><td style="font-weight: bold; color: #2e7d32;"><span id="lbl_currency_sign">₹</span><span id="lbl_base_price">0</span></td></tr>
       <tr><td class="spec-label">Selected Qty:</td><td id="lbl_order_qty" style="font-weight: bold;">1</td></tr>
+      <tr><td class="spec-label">Shipping Charge:</td><td id="lbl_shipping_cost" style="font-weight: bold; color: #e65100;">₹0</td></tr>
     </table>
     <div class="payable-container" style="background: #f4f9f4; padding: 15px; border-radius: 8px;">
       Total Payable Amount: <span id="sum_price_1" class="payable-amount">₹0</span>
@@ -76,10 +77,10 @@
     
     <div class="section-headline">💳 Choose Your Payment Method:</div>
     <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
-       <button id="cashfree_gate_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
-       <button id="manual_upi_btn" class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
-       
-       <button id="paypal_global_btn" class="btn-orange" style="background: #003087; padding:15px; font-weight:bold; display:none;" onclick="goToPayPalStep()">🌍 Option C: Pay via PayPal (International Multi-Currency)</button>
+        <button id="cashfree_gate_btn" class="btn-orange" style="background: #1a73e8; padding:15px; font-weight:bold;" onclick="payViaCashfreeEngine()">💳 Option A: Pay via Cashfree Gateway (INR)</button>
+        <button id="manual_upi_btn" class="btn-orange" style="background: #2e7d32; padding:15px; font-weight:bold;" onclick="goToManualQRStep()">📱 Option B: Pay via Instant UPI QR (INR)</button>
+        
+        <button id="paypal_global_btn" class="btn-orange" style="background: #003087; padding:15px; font-weight:bold; display:none;" onclick="goToPayPalStep()">🌍 Option C: Pay via PayPal (International Multi-Currency)</button>
     </div>
     
     <div style="display:flex; justify-content:space-between; margin-top:30px; border-top: 1px solid #eee; padding-top: 15px;">
@@ -224,8 +225,6 @@
     }
   }, false);
 
-  var finalAmt_1 = 0;
-
   function validateShippingForm() {
     let fields = ['name_1', 'phone_1', 'email_1', 'addr_1', 'pin_1'];
     for(let f of fields) { if(!document.getElementById(f).value.trim()) return false; }
@@ -247,7 +246,12 @@
     const params = getLiveMondalURLParams();
     let backupInrPrice = parseFloat(params.get('price')) || 0;
     if(backupInrPrice > 0) {
-      finalAmt_1 = backupInrPrice;
+      // এখানেও ৩০০ টাকার নিচের কন্ডিশন চেক করা হচ্ছে ব্যাকআপ সুরক্ষার জন্য
+      if(backupInrPrice < 300) {
+        finalAmt_1 = backupInrPrice + 50;
+      } else {
+        finalAmt_1 = backupInrPrice;
+      }
     }
 
     document.getElementById('cashfree_gate_btn').innerText = "Opening Gateway...";
@@ -288,7 +292,13 @@
     
     const params = getLiveMondalURLParams();
     let backupInrPrice = parseFloat(params.get('price')) || 0;
-    if(backupInrPrice > 0) finalAmt_1 = backupInrPrice;
+    if(backupInrPrice > 0) {
+      if(backupInrPrice < 300) {
+        finalAmt_1 = backupInrPrice + 50;
+      } else {
+        finalAmt_1 = backupInrPrice;
+      }
+    }
 
     document.getElementById('st2_1').style.display = 'none';
     document.getElementById('st3_manual_qr').style.display = 'block';
@@ -406,13 +416,20 @@
   async function loadAndPrefillEngine() {
     try {
       const params = getLiveMondalURLParams();
+      
+      // এই লাইনে ব্যাকআপ হিসেবে প্রথম ভ্যালু অ্যাসাইন করার আগে ফ্রেশ ভ্যালু নিয়ে নেওয়া হচ্ছে 
+      let price = parseFloat(params.get('price')) || 0;
+      
       if (params.has('cf_id')) {
-        executeSheetSaveAfterPayment(params.get('cf_id'), "Cashfree Auto Paid", "INR " + finalAmt_1);
+        let finalAmt_cf = price;
+        if(price > 0 && price < 300) {
+            finalAmt_cf = price + 50;
+        }
+        executeSheetSaveAfterPayment(params.get('cf_id'), "Cashfree Auto Paid", "INR " + finalAmt_cf);
         return;
       }
       
       if (params.has('sku') || params.has('title')) {
-        let price = parseFloat(params.get('price')) || 0;
         let qty = parseInt(params.get('orderqty')) || parseInt(params.get('qty')) || 1;
         
         let rawFPrice = params.get('f_price') || params.get('foreign_price') || params.get('foreignPrice') || "0";
@@ -421,7 +438,6 @@
           fPriceParam = parseFloat(rawFPrice.toString().replace(/[^0-9.]/g, '')) || 0;
         }
         
-        finalAmt_1 = price; 
         foreignBaseAmtInr = fPriceParam; 
         
         let bTitle = decodeURIComponent(params.get('title') || 'No Title').replace(/\+/g, ' ');
@@ -451,6 +467,7 @@
            if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = usdUnitPrice.toFixed(2);
            if(document.getElementById('sum_price_1')) document.getElementById('sum_price_1').innerText = "$" + usdTotalPayable.toFixed(2) + " USD";
            if(document.getElementById('lbl_type')) document.getElementById('lbl_type').style.color = "#003087";
+           if(document.getElementById('lbl_shipping_cost')) document.getElementById('lbl_shipping_cost').innerText = "Calculated at PayPal";
            
            if(document.getElementById('cashfree_gate_btn')) document.getElementById('cashfree_gate_btn').style.display = "none";
            if(document.getElementById('manual_upi_btn')) document.getElementById('manual_upi_btn').style.display = "none";
@@ -472,6 +489,16 @@
                if(document.getElementById('lbl_base_price')) document.getElementById('lbl_base_price').innerText = price;
                if(document.getElementById('lbl_type')) document.getElementById('lbl_type').style.color = "#e65100";
            }
+           
+           // 🛒 এখানে ৩০০ টাকার নিচের কন্ডিশন এবং শিপিং চার্জ ক্যালকুলেশন হচ্ছে (INR এর জন্য)
+           if (price > 0 && price < 300) {
+               finalAmt_1 = price + 50; // ৫০ টাকা শিপিং যোগ হলো 
+               if(document.getElementById('lbl_shipping_cost')) document.getElementById('lbl_shipping_cost').innerText = "₹50";
+           } else {
+               finalAmt_1 = price; // কোনো শিপিং চার্জ নেই 
+               if(document.getElementById('lbl_shipping_cost')) document.getElementById('lbl_shipping_cost').innerText = "FREE";
+           }
+           
            if(document.getElementById('sum_price_1')) document.getElementById('sum_price_1').innerText = "₹" + finalAmt_1;
         }
 
